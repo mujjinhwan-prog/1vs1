@@ -299,8 +299,8 @@ const CHARS = [
    skin:'#f7dccb', hair:'#d8bf86', hs:'buzz',
    passive:'1줄만 지워도 상대에게 1줄 공격', spName:'눈가림', special:'상대의 그림자·다음 블록을 8초간 숨기고 2줄 공격', need:11,
    atk:[0,1,1,2,3]},
-  {id:'chrono', eye:'#5a3420', name:'S.효양', nick:'크로노', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'시간 지배형 ★최강',
-   skin:'#f4d2b2', hair:'#2a1a12', hs:'long',
+  {id:'chrono', eye:'#5a3420', name:'S.효양', nick:'크로노', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'시간 지배형',
+   skin:'#f4d2b2', hair:'#2a1a12', hs:'bobside',
    passive:'내 블록이 35% 느리게 떨어짐 · 1줄부터 공격(2줄→2, 3줄→3, 4줄→5) · 받는 공격 30% 확률로 무효', spName:'시간 지배', special:'즉시 3줄 공격 + 8초 동안 상대 블록 3배 빠르게 + 내 대기 공격 2줄 제거', need:7,
    atk:[0,1,2,3,5]},
   {id:'leaf', eye:'#2b1a10', name:'사토 하나', nick:'리프', nat:'일본', flag:'🇯🇵', g:'f', emo:'🌿', c:'#3ddc97', type:'회복형',
@@ -335,6 +335,7 @@ function avatar(ch,size,mood='normal'){
     case 'buzz':  front=`<path d="M20 27 Q20 16 32 16 Q44 16 44 27 Q38 21 32 21 Q26 21 20 27Z" fill="${H}"/>`; break;
     case 'long':  back=`<path d="M17 30 Q17 12 32 12 Q47 12 47 30 L49 60 L15 60Z" fill="${H}"/>`; front=`<path d="${bangs}" fill="${H}"/>`; break;
     case 'bob':   back=`<path d="M16 30 Q16 12 32 12 Q48 12 48 30 L48 45 L16 45Z" fill="${H}"/>`; front=`<path d="M19 30 Q19 14 32 14 Q45 14 45 30 L45 26 Q32 24 19 26Z" fill="${H}"/>`; break;
+    case 'bobside': back=`<path d="M16.5 30 Q16 12 32 12 Q48 12 47.5 30 L47 44 Q44 46 41 44 L23 44 Q20 46 17 44Z" fill="${H}"/>`; front=`<path d="M19 31 Q18 14 33 14 Q46 15 45 30 Q42 21 30 23 Q24 24 19 31Z" fill="${H}"/>`; break;
     case 'pony':  back=`<circle cx="47" cy="22" r="7" fill="${H}"/><path d="M47 26 Q54 36 49 46 Q46 36 44 28Z" fill="${H}"/>`; front=`<path d="${bangs}" fill="${H}"/>`; break;
     case 'curly': front=[...Array(9)].map((_,i)=>{const a=Math.PI*(1+i/8);return `<circle cx="${(32+13*Math.cos(a)).toFixed(1)}" cy="${(27+11*Math.sin(a)).toFixed(1)}" r="4.2" fill="${H}"/>`}).join('')+`<path d="M20 27 Q20 16 32 16 Q44 16 44 27 Q38 21 32 21 Q26 21 20 27Z" fill="${H}"/>`; break;
     case 'afro':  back=[...Array(12)].map((_,i)=>{const a=Math.PI*(0.85+i*1.3/11);return `<circle cx="${(32+17*Math.cos(a)).toFixed(1)}" cy="${(30+15*Math.sin(a)).toFixed(1)}" r="8" fill="${H}"/>`}).join('')+`<circle cx="32" cy="26" r="15" fill="${H}"/>`;

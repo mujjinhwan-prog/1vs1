@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>블록 대결</title>
+<title>대결 블록</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="블록 대결">
+<meta name="apple-mobile-web-app-title" content="대결 블록">
 <meta name="theme-color" content="#14162e">
 <meta name="format-detection" content="telephone=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -159,8 +159,9 @@ body.desk.vscpu #p1 .keys{display:none}
 .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:10;
   background:color-mix(in srgb,var(--bg) 40%,transparent)}
 .overlay.hidden{display:none}
-.card{background:var(--panel);border-radius:20px;padding:18px;max-width:360px;width:100%;text-align:center;
+.card{background:var(--panel);border-radius:20px;padding:18px;max-width:360px;width:100%;text-align:center;max-height:calc(100dvh - 40px);overflow:auto;touch-action:pan-y;
   box-shadow:0 18px 50px -16px rgba(20,22,60,.55)}
+.credit{text-align:center;font-size:8px;font-weight:400;margin-top:12px;color:var(--muted);letter-spacing:.2px}
 .card h1{font-size:32px;margin:0 0 4px;letter-spacing:-1px}
 .card h1 .a{color:var(--p1)} .card h1 .b{color:var(--p2)}
 .card p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.6}
@@ -177,6 +178,21 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
 .lvb{border:0;border-radius:10px;height:44px;font-weight:700;font-size:16px;
   background:color-mix(in srgb,var(--c) 22%,var(--bg))}
 .lvb.sel{background:var(--c);color:#fff}
+.cq-prog{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin:0 0 10px}
+.cq-prog .bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.cq-prog .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--warn))}
+.cq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.cq{position:relative;border:2px solid var(--line);background:var(--bg);border-radius:14px;padding:7px 2px 6px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:700;word-break:keep-all;line-height:1.15}
+.cq svg{border-radius:50%}
+.cq small{font-weight:400;color:var(--muted);font-size:10px}
+.cq:not(.done){border-color:color-mix(in srgb,var(--c) 60%,var(--line))}
+.cq.done{opacity:.55}
+.cq.done::after{content:'정복';position:absolute;top:28%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);
+  font-family:'Black Han Sans','Noto Sans KR',sans-serif;font-size:18px;color:#e5383b;border:2.5px solid #e5383b;
+  border-radius:8px;padding:0 6px;background:color-mix(in srgb,var(--panel) 75%,transparent)}
+.cq-me{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:8px}
+.cq-me svg{border-radius:50%}
 .lvdesc{font-size:13px;font-weight:700;margin-bottom:14px;min-height:20px}
 /* 태블릿(터치 + 넓은 화면): 버튼 크게 */
 @media (pointer:coarse) and (min-width:700px){
@@ -923,6 +939,10 @@ class CPU{
 const P1=new Player(1,$('#p1')), P2=new Player(2,$('#p2'));
 P1.opp=P2; P2.opp=P1;
 const players=[P1,P2];
+let conqOn=false, conq=null, conqTarget=null;
+function loadConq(){ try{ const v=JSON.parse(localStorage.getItem('bd_conq')||'null'); return (v&&CMAP[v.char])?v:null; }catch(_){ return null; } }
+function saveConq(){ try{ localStorage.setItem('bd_conq',JSON.stringify(conq)); }catch(_){} }
+function clearConq(){ try{ localStorage.removeItem('bd_conq'); }catch(_){} }
 let state='menu', mode='pvp', cpuLvl=5, cpu=null, elapsed=0, wins={1:0,2:0}, primaryAction=null;
 const picks={1:null,2:null}, readyFlags={1:false,2:false};
 
@@ -944,7 +964,45 @@ const actions={
   resume(){ FS.enter(); hideCard(); state='playing'; Music.start(); Wake.on(); },
   restart(){ FS.enter(); hideCard(); startGame(); },
   repick(){ hideCard(); openPickers(); },
+  conq(){ FS.enter(); conqStart(); },
+  conqNew(){ clearConq(); conq=null; cpuSetup(true); },
+  conqGo(){ FS.enter(); mode='cpu'; conqOn=true; wins={1:0,2:0}; updateScore(); hideCard(); openPickers(); },
+  conqCont(){ FS.enter(); mode='cpu'; conqOn=true; conq=loadConq(); wins={1:0,2:0}; updateScore();
+    P2.setChar(CMAP[conq.char]); hideCard(); conqMap(); },
+  conqMap(){ hideCard(); conqMap(); },
+  conqRetry(){ FS.enter(); hideCard(); startGame(); },
 };
+
+/* ===== 정복 모드 ===== */
+function conqLevel(){ return Math.min(10, conq.base + conq.done.length); }
+function conqStart(){
+  const saved=loadConq();
+  if(saved && saved.done.length < CHARS.length-1){
+    const me=CMAP[saved.char];
+    showCard(`<h1 class="disp">🏆 정복 모드</h1>
+      <div class="cq-me">${avatar(me,40,'happy')}<span><b style="color:var(--ink)">${esc(P2.nameFor(me.id))}</b> 진행 중 · ${saved.done.length}/${CHARS.length-1} 정복</span></div>
+      <div class="btns"><button class="btn" data-go="conqCont">이어하기</button><button class="btn ghost" data-go="conqNew">새로 시작</button><button class="btn ghost" data-go="menu">뒤로</button></div>`, actions.conqCont);
+  }else cpuSetup(true);
+}
+function conqMap(){
+  state='map'; setLabels();
+  players.forEach(p=>{ p.reset(); p.say(''); });
+  const me=CMAP[conq.char], foes=CHARS.filter(c=>c.id!==conq.char), n=conq.done.length, lv=conqLevel();
+  P2.say(`${avatar(me,72,'happy')}<div class="sm">${esc(P2.nameFor(me.id))}</div>`);
+  P1.say(`<div class="big">?</div><div class="sm">다음 상대를 골라요</div>`);
+  showCard(`<h1 class="disp">정복할 상대</h1>
+    <div class="cq-prog"><span>${n}/${foes.length}</span><div class="bar"><i style="width:${n/foes.length*100}%"></i></div><span>다음 Lv.${lv}</span></div>
+    <div class="cq-grid">${foes.map(c=>{ const d=conq.done.includes(c.id);
+      return `<button class="cq${d?' done':''}" data-cq="${c.id}" style="--c:${c.c}" ${d?'disabled':''}>${avatar(c,40,d?'shock':'normal')}
+        <span>${esc(c.name)}</span><small>${c.flag} ${c.type}</small></button>`; }).join('')}</div>
+    <p style="margin:0 0 10px">한 명을 정복할 때마다 컴퓨터 레벨이 1씩 올라가요.</p>
+    <div class="btns"><button class="btn ghost" data-go="menu">처음으로</button></div>`);
+  card.querySelectorAll('[data-cq]').forEach(b=>b.addEventListener('click',()=>{
+    FS.enter();
+    conqTarget=b.dataset.cq; cpuLvl=conqLevel();
+    P1.setChar(CMAP[conqTarget]); setLabels(); hideCard(); startGame();
+  }));
+}
 
 function setLabels(){
   document.body.classList.toggle('vscpu',mode==='cpu');
@@ -954,21 +1012,25 @@ function setLabels(){
 }
 
 function menu(){
-  state='menu'; Music.stop(); Wake.off(); cpu=null; closePickers(); players.forEach(p=>{p.reset(); p.say('');});
+  state='menu'; conqOn=false; Music.stop(); Wake.off(); cpu=null; closePickers(); players.forEach(p=>{p.reset(); p.say('');});
   document.body.classList.remove('vscpu');
-  showCard(`<div class="mirror">블록 대결 · 모드를 골라 주세요</div>
-    <h1 class="disp"><span class="a">블록</span> <span class="b">대결</span></h1>
+  showCard(`<div class="mirror">대결 블록 · 모드를 골라 주세요</div>
+    <h1 class="disp"><span class="a">대결</span> <span class="b">블록</span></h1>
     <p>2줄 이상 한 번에 지우면 상대에게 방해 줄이 올라가요.<br>캐릭터마다 공격·방어·필살기가 달라요.</p>
     <div class="modes">
       <button class="mode" data-go="pvp"><b>👥 둘이서 대결</b><span>폰을 눕히고 위·아래 끝에 마주 앉아요</span></button>
       <button class="mode" data-go="cpu"><b>🤖 컴퓨터와 대결</b><span>난이도 1~10 중에서 골라요</span></button>
-    </div>${FS.can()?'':`<p style="margin:12px 0 0;font-size:12px">이 기기는 브라우저 전체화면을 지원하지 않아요.<br>공유 → <b>홈 화면에 추가</b>로 열면 전체화면으로 플레이돼요.</p>`}`);
+      <button class="mode" data-go="conq"><b>🏆 정복 모드</b><span>컴퓨터 캐릭터 9명을 하나씩 이겨서 모두 정복해요</span></button>
+    </div>
+    <div class="credit">Made by mujjinhwan with yang</div>${FS.can()?'':`<p style="margin:12px 0 0;font-size:12px">이 기기는 브라우저 전체화면을 지원하지 않아요.<br>공유 → <b>홈 화면에 추가</b>로 열면 전체화면으로 플레이돼요.</p>`}`);
 }
-function cpuSetup(){
+function cpuSetup(forConq){
   const grid=Array.from({length:10},(_,i)=>`<button class="lvb${i+1===cpuLvl?' sel':''}" data-lv="${i+1}" style="--c:${LVCOL[i+1]}">${i+1}</button>`).join('');
-  showCard(`<h1 class="disp">컴퓨터 난이도</h1><p>숫자가 클수록 빠르고 실수가 적어요.</p>
+  const next=forConq?'conqGo':'cpuNext';
+  showCard(`<h1 class="disp">${forConq?'🏆 시작 난이도':'컴퓨터 난이도'}</h1>
+    <p>${forConq?'첫 상대의 레벨이에요. 한 명 정복할 때마다 1씩 올라가요.':'숫자가 클수록 빠르고 실수가 적어요.'}</p>
     <div class="lvgrid">${grid}</div><div class="lvdesc" id="lvdesc">레벨 ${cpuLvl} · ${LVDESC[cpuLvl]}</div>
-    <div class="btns"><button class="btn ghost" data-go="menu">뒤로</button><button class="btn" data-go="cpuNext">캐릭터 고르기</button></div>`, actions.cpuNext);
+    <div class="btns"><button class="btn ghost" data-go="menu">뒤로</button><button class="btn" data-go="${next}">캐릭터 고르기</button></div>`, actions[next]);
   card.querySelectorAll('.lvb').forEach(b=>b.addEventListener('click',()=>{
     cpuLvl=+b.dataset.lv;
     card.querySelectorAll('.lvb').forEach(x=>x.classList.toggle('sel',x===b));
@@ -981,7 +1043,11 @@ function openPickers(){
   state='select'; Music.stop(); setLabels();
   readyFlags[1]=readyFlags[2]=false;
   players.forEach(p=>{ p.reset(); });
-  if(mode==='cpu'){
+  if(mode==='cpu'&&conqOn){
+    readyFlags[1]=true; P1.picker.classList.add('hidden');
+    P1.say(`<div class="big">🏆</div><div class="sm">내 캐릭터를 고르면<br>정복할 상대 목록이 나와요</div>`);
+    renderPicker(P2);
+  }else if(mode==='cpu'){
     const ch=CHARS[Math.floor(Math.random()*CHARS.length)];
     picks[1]=ch.id; P1.setChar(ch); readyFlags[1]=true;
     P1.picker.classList.add('hidden');
@@ -1030,7 +1096,11 @@ function renderPicker(p){
   p.picker.querySelector('.pk-go').addEventListener('click',()=>{
     FS.enter();
     readyFlags[p.id]=true; p.setChar(CMAP[picks[p.id]]);
-    if(readyFlags[1]&&readyFlags[2]){ closePickers(); startGame(); }
+    if(readyFlags[1]&&readyFlags[2]){
+      closePickers();
+      if(conqOn){ conq={char:p.ch.id, base:cpuLvl, done:[]}; saveConq(); conqMap(); }
+      else startGame();
+    }
     else{
       // 먼저 준비한 사람도 상대가 고르기 전까지는 캐릭터·이름을 다시 바꿀 수 있음
       p.picker.innerHTML=`<div class="pk-head disp">${esc(p.dispName())} 준비 완료</div>
@@ -1067,6 +1137,25 @@ function gameOver(loser){
   const title = mode==='cpu' ? (youWin?'<span class="b">승리!</span>':'<span class="a">CPU 승리</span>')
                              : `<span class="${winner.id===1?'a':'b'}">${esc(winner.dispName())} 승리</span>`;
   const score = mode==='cpu' ? `나 ${wins[2]} : ${wins[1]} CPU Lv.${cpuLvl}` : `${esc(P1.dispName())} ${wins[1]} : ${wins[2]} ${esc(P2.dispName())}`;
+  if(conqOn){
+    const foe=CMAP[conqTarget], total=CHARS.length-1;
+    if(youWin && !conq.done.includes(foe.id)){ conq.done.push(foe.id); saveConq(); }
+    const all=conq.done.length>=total;
+    if(all) clearConq();
+    setTimeout(()=>{ if(state!=='over') return;
+      if(all) showCard(`<h1 class="disp"><span class="b">🏆 전체 정복!</span></h1>
+        <div class="cq-me">${avatar(CMAP[conq.char],56,'happy')}</div>
+        <p>${esc(P2.nameFor(conq.char))}(이)가 ${total}명을 모두 정복했어요!</p>
+        <div class="btns"><button class="btn" data-go="conq">다시 도전</button><button class="btn ghost" data-go="menu">처음으로</button></div>`, actions.menu);
+      else if(youWin) showCard(`<h1 class="disp"><span class="b">${esc(foe.name)} 정복!</span></h1>
+        <div class="cq-me">${avatar(foe,48,'shock')}<span>${conq.done.length}/${total} 정복 · 다음 상대는 Lv.${conqLevel()}</span></div>
+        <div class="btns"><button class="btn" data-go="conqMap">다음 상대 고르기</button><button class="btn ghost" data-go="menu">처음으로</button></div>`, actions.conqMap);
+      else showCard(`<h1 class="disp"><span class="a">${esc(foe.name)}에게 패배</span></h1>
+        <div class="cq-me">${avatar(foe,48,'happy')}<span>${conq.done.length}/${total} 정복 · 진행 상황은 저장돼요</span></div>
+        <div class="btns"><button class="btn" data-go="conqRetry">다시 도전</button><button class="btn ghost" data-go="conqMap">다른 상대</button><button class="btn ghost" data-go="menu">처음으로</button></div>`, actions.conqRetry);
+    }, 1400);
+    return;
+  }
   setTimeout(()=>{ if(state!=='over') return; showCard(`<div class="mirror">${esc(winner.dispName())} 승리 · 한 판 더?</div>
     <h1 class="disp">${title}</h1><p>${score}</p>
     <div class="btns"><button class="btn" data-go="restart">한 판 더</button><button class="btn ghost" data-go="repick">캐릭터 변경</button><button class="btn ghost" data-go="menu">처음으로</button></div>`, actions.restart); }, 1400);
@@ -1090,7 +1179,7 @@ document.addEventListener('fullscreenchange',onFs);
 document.addEventListener('webkitfullscreenchange',onFs);
 function askHome(){
   if(state==='menu') return;
-  if(state!=='playing'&&state!=='paused'){ hideCard(); menu(); return; } // 선택·카운트다운·결과 화면은 바로 이동
+  if(state!=='playing'&&state!=='paused'){ hideCard(); menu(); return; } // 선택·지도·카운트다운·결과 화면은 바로 이동
   if(state==='playing'){ state='paused'; releaseAll(); Music.stop(); Wake.off(); }
   showCard(`<div class="mirror">처음 화면으로 갈까요?</div><h1 class="disp">처음으로</h1>
     <p>진행 중인 판은 사라지고 모드 선택 화면으로 돌아가요.</p>
@@ -1154,7 +1243,7 @@ players.forEach(p=>{
     b.addEventListener('contextmenu',e=>e.preventDefault());
   });
 });
-document.addEventListener('touchmove',e=>{ if(!e.target.closest('.picker')) e.preventDefault(); },{passive:false});
+document.addEventListener('touchmove',e=>{ if(!e.target.closest('.picker,.card')) e.preventDefault(); },{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 
 /* ===== 루프 ===== */

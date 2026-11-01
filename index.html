@@ -285,7 +285,7 @@ const COLORS = {I:'#ff8fb8',O:'#ffd23f',T:'#3ddc97',S:'#4d9de0',Z:'#ff6f59',J:'#
 
 /* ===== 캐릭터 ===== */
 const CHARS = [
-  {id:'blaze', eye:'#3b2416', name:'송진환', nick:'블레이즈', nat:'한국', flag:'🇰🇷', g:'m', emo:'🔥', c:'#ff5a3c', type:'공격형',
+  {id:'blaze', eye:'#3b2416', name:'S.진환', nick:'블레이즈', nat:'한국', flag:'🇰🇷', g:'m', emo:'🔥', c:'#ff5a3c', type:'공격형',
    skin:'#f2cfac', hair:'#1c1410', hs:'side',
    passive:'3줄 동시 제거 시 5줄 공격, 4줄 제거 시 6줄 공격', spName:'화염탄', special:'상대에게 즉시 방해 줄 4줄', need:12,
    atk:[0,0,1,5,6]},
@@ -299,9 +299,10 @@ const CHARS = [
    skin:'#f7dccb', hair:'#d8bf86', hs:'buzz',
    passive:'1줄만 지워도 상대에게 1줄 공격', spName:'눈가림', special:'상대의 그림자·다음 블록을 8초간 숨기고 2줄 공격', need:11,
    atk:[0,1,1,2,3]},
-  {id:'chrono', eye:'#5a3420', name:'송효양', nick:'크로노', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'속도형',
+  {id:'chrono', eye:'#5a3420', name:'S.효양', nick:'크로노', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'시간 지배형 ★최강',
    skin:'#f4d2b2', hair:'#2a1a12', hs:'long',
-   passive:'내 블록이 25% 느리게 떨어짐', spName:'가속', special:'8초 동안 상대 블록이 3배 빨리 떨어짐', need:8},
+   passive:'내 블록이 35% 느리게 떨어짐 · 1줄부터 공격(2줄→2, 3줄→3, 4줄→5) · 받는 공격 30% 확률로 무효', spName:'시간 지배', special:'즉시 3줄 공격 + 8초 동안 상대 블록 3배 빠르게 + 내 대기 공격 2줄 제거', need:7,
+   atk:[0,1,2,3,5]},
   {id:'leaf', eye:'#2b1a10', name:'사토 하나', nick:'리프', nat:'일본', flag:'🇯🇵', g:'f', emo:'🌿', c:'#3ddc97', type:'회복형',
    skin:'#f3d0b0', hair:'#1a1210', hs:'bob',
    passive:'3줄 이상 동시 제거 시 내 방해 줄 2줄 삭제', spName:'정화', special:'내 방해 줄 4줄 삭제 + 대기 중인 공격 모두 제거', need:10},
@@ -712,6 +713,7 @@ class Player{
   receive(n,reflected){
     if(this.dead) return;
     if(this.shieldT>0){ SFX.block(); this.mood('happy',1200); this.pop('🛡️ 막음'); return; }
+    if(this.ch.id==='chrono'&&!reflected&&Math.random()<0.3){ SFX.block(); this.mood('happy',1200); this.pop('⏳ 시간 회피'); return; }
     if(this.ch.id==='iron'){ n=Math.max(0,n-1); if(!n){ SFX.block(); this.mood('happy',1200); this.pop('🛡️ 막음'); return; } }
     if(this.ch.id==='echo'&&!reflected){
       if(this.reflectT>0){ this.opp.receive(n,true); this.mood('happy',1200); this.pop(`🪞 ${n}줄 반사`); return; }
@@ -744,7 +746,7 @@ class Player{
       case 'iron': this.shieldT=10000; break;
       case 'beat': this.feverT=8000; break;
       case 'hawk': o.blindT=8000; o.receive(2); o.pop('🎯 눈가림!'); break;
-      case 'chrono': o.hasteT=8000; o.pop('⏳ 가속!'); break;
+      case 'chrono': o.receive(3); o.hasteT=8000; this.pending=Math.max(0,this.pending-2); o.pop('⏳ 시간 지배!'); break;
       case 'leaf': this.clearGarbage(4); this.pending=0; break;
       case 'echo': this.reflectT=6000; break;
       case 'prism': this.forced.push('I','I','I'); break;
@@ -781,7 +783,7 @@ class Player{
     if(s!==this.statusTxt){ this.statusTxt=s; this.statusEl.textContent=s; }
     this.updateHud();
     if(this.dead||!this.cur) return;
-    let iv=interval*(this.ch.id==='chrono'?1.25:1);
+    let iv=interval*(this.ch.id==='chrono'?1.35:1);
     if(this.hasteT>0) iv/=3;
     this.drop+=dt;
     if(this.drop>=iv){ this.drop=0; if(!this.grounded()) this.cur.y++; }

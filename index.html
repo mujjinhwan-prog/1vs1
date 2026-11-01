@@ -58,6 +58,12 @@ body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{visibility:hidden}
 .pname{color:var(--pc);font-size:20px;line-height:1}
 .cname{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
 .cname svg{flex:none;border-radius:50%}
+.face{width:48px;height:48px;border-radius:50%;box-shadow:0 0 0 2px var(--pc);margin-bottom:3px;flex:none}
+.face svg{display:block;width:100%;height:100%;border-radius:50%}
+.face.bump{animation:bump .5s}
+.face.jolt{animation:jolt .45s}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.22) rotate(-6deg)}70%{transform:scale(.95)}100%{transform:scale(1)}}
+@keyframes jolt{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) rotate(-5deg)}40%{transform:translateX(4px) rotate(5deg)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 .lines,.wins{font-size:12px;color:var(--muted)}
 .wins b{color:var(--ink);font-size:14px}
 .gauge{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:2px}
@@ -173,6 +179,7 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   .pad.big{height:100px;font-size:38px}
   .pad.sp{height:66px;font-size:18px}
   .pads{gap:8px}
+  .face{width:68px;height:68px}
   .pname{font-size:26px} .cname{font-size:16px} .lines,.wins,.status{font-size:14px}
   .pk-grid{gap:8px} .ch{font-size:13px;padding:8px 2px} .pk-info{font-size:14px} .pk-go{padding:15px;font-size:17px}
   .opt{font-size:13px} .seg button{font-size:15px;padding:11px 4px} .opt small{font-size:12px}
@@ -195,6 +202,7 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   <section class="player" id="p1">
     <div class="side">
       <div class="info">
+        <div class="face"></div>
         <span class="pname disp">P1</span><span class="cname"></span>
         <span class="lines">0줄</span><span class="wins">승 <b>0</b></span>
         <div class="gauge"><i></i></div><span class="status"></span>
@@ -228,6 +236,7 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   <section class="player" id="p2">
     <div class="side">
       <div class="info">
+        <div class="face"></div>
         <span class="pname disp">P2</span><span class="cname"></span>
         <span class="lines">0줄</span><span class="wins">승 <b>0</b></span>
         <div class="gauge"><i></i></div><span class="status"></span>
@@ -307,8 +316,8 @@ const CHARS = [
 const CMAP = Object.fromEntries(CHARS.map(c=>[c.id,c]));
 
 /* 캐릭터 얼굴 (모두 같은 얼굴 틀에 피부색·머리 모양만 다르게) */
-function avatar(ch,size){
-  const H=ch.hair, S=ch.skin, uid='a'+ch.id+size;
+function avatar(ch,size,mood='normal'){
+  const H=ch.hair, S=ch.skin, uid='a'+ch.id+size+mood;
   const cap='M19 30 Q19 15 32 15 Q45 15 45 30 Q40 22 32 22 Q24 22 19 30Z';
   const bangs='M19 32 Q19 15 32 15 Q45 15 45 32 Q43 22 36 21 Q30 26 19 32Z';
   let back='', front='';
@@ -325,13 +334,29 @@ function avatar(ch,size){
                   front=`<path d="${bangs}" fill="${H}"/>`; break;
   }
   const E=ch.eye||'#3b2416', f=ch.g==='f';
-  const eye=(cx)=>`
+  // 기본: 큰 흰 눈 + 눈동자 / 웃음: 눈을 감고 활짝 / 놀람: 눈이 커지고 눈동자가 작아짐
+  const eye=(cx)=> mood==='happy' ? `
+      <path d="M${cx-3.4} 35.6 Q${cx} 31.2 ${cx+3.4} 35.6" stroke="#2a1d16" stroke-width="1.5" fill="none" stroke-linecap="round"/>`
+    : mood==='shock' ? `
+      <path d="M${cx-3} 27.6 Q${cx} 25.4 ${cx+3} 27.6" stroke="#2a1d16" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <ellipse cx="${cx}" cy="34.4" rx="4.3" ry="5.1" fill="#fff" stroke="#2a1d16" stroke-width=".7"/>
+      <circle cx="${cx}" cy="34.6" r="1.8" fill="${E}"/>
+      <circle cx="${cx}" cy="34.6" r=".95" fill="#140c08"/>
+      <circle cx="${cx+0.7}" cy="33.8" r=".5" fill="#fff"/>`
+    : `
       <ellipse cx="${cx}" cy="34.5" rx="3.7" ry="4.4" fill="#fff" stroke="#2a1d16" stroke-width=".7"/>
       <circle cx="${cx+0.3}" cy="35.2" r="2.7" fill="${E}"/>
       <circle cx="${cx+0.3}" cy="35.4" r="1.35" fill="#140c08"/>
       <circle cx="${cx+1.2}" cy="33.9" r="1" fill="#fff"/>
       <circle cx="${cx-0.6}" cy="36.4" r=".45" fill="#fff" opacity=".9"/>`;
-  const lash = f ? `<path d="M22.6 32.2 L21.2 31.2 M22.9 33.3 L21.4 33" stroke="#2a1d16" stroke-width=".8" stroke-linecap="round"/>
+  const mouth = mood==='happy'
+      ? `<path d="M28.3 40.4 Q32 47 35.7 40.4Z" fill="#5a2020"/><ellipse cx="32" cy="43.9" rx="1.7" ry="1" fill="#ff8a9a"/>`
+    : mood==='shock'
+      ? `<ellipse cx="32" cy="42.3" rx="1.9" ry="2.5" fill="#5a2020"/>
+         <path d="M47.5 23.5 Q50.2 28 47.5 29.6 Q44.8 28 47.5 23.5Z" fill="#8fd3ff" stroke="#fff" stroke-width=".5"/>`
+      : `<path d="M30 41 Q32 43.2 34 41" stroke="#2a1d16" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  const cheek = mood==='happy' ? (f?.6:.45) : (f?.45:.3);
+  const lash = (f&&mood!=='happy') ? `<path d="M22.6 32.2 L21.2 31.2 M22.9 33.3 L21.4 33" stroke="#2a1d16" stroke-width=".8" stroke-linecap="round"/>
       <path d="M41.4 32.2 L42.8 31.2 M41.1 33.3 L42.6 33" stroke="#2a1d16" stroke-width=".8" stroke-linecap="round"/>` : '';
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
     <defs><clipPath id="${uid}"><circle cx="32" cy="32" r="32"/></clipPath></defs>
@@ -344,9 +369,9 @@ function avatar(ch,size){
       <ellipse cx="32" cy="33" rx="14.2" ry="14.6" fill="${S}"/>
       ${front}
       ${eye(26.4)}${eye(37.6)}${lash}
-      <ellipse cx="22.6" cy="40.2" rx="2.6" ry="1.6" fill="#ff7f8f" opacity="${f?.45:.3}"/>
-      <ellipse cx="41.4" cy="40.2" rx="2.6" ry="1.6" fill="#ff7f8f" opacity="${f?.45:.3}"/>
-      <path d="M30 41 Q32 43.2 34 41" stroke="#2a1d16" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="22.6" cy="40.2" rx="2.6" ry="1.6" fill="#ff7f8f" opacity="${cheek}"/>
+      <ellipse cx="41.4" cy="40.2" rx="2.6" ry="1.6" fill="#ff7f8f" opacity="${cheek}"/>
+      ${mouth}
     </g></svg>`;
 }
 
@@ -546,6 +571,7 @@ class Player{
     this.statusEl=root.querySelector('.status'); this.spBtn=root.querySelector('.pad.sp');
     this.spFill=this.spBtn.querySelector('.fill'); this.spLabel=this.spBtn.querySelector('span');
     this.picker=root.querySelector('.picker');
+    this.faceEl=root.querySelector('.face'); this.curMood=null; this.moodT=null;
     this.sides=root.querySelectorAll(':scope > .side');
     this.ctrlEl=root.querySelector('.ctrl'); this.rctrlEl=root.querySelector('.rctrl');
     this.opt=loadOpt(id); this.applyOpt();
@@ -557,10 +583,21 @@ class Player{
     if(this.opt.lefty){ ls.appendChild(this.rctrlEl); rs.appendChild(this.ctrlEl); }
     else{ ls.appendChild(this.ctrlEl); rs.appendChild(this.rctrlEl); }
   }
+  // 표정: 'normal' | 'happy'(공격 성공) | 'shock'(공격 받음). ms가 있으면 그 뒤 기본 표정으로 돌아감
+  mood(m,ms){
+    clearTimeout(this.moodT);
+    if(this.curMood!==m){ this.curMood=m; this.faceEl.innerHTML=avatar(this.ch,48,m); }
+    if(m!=='normal'){
+      const c=m==='shock'?'jolt':'bump';
+      this.faceEl.classList.remove('bump','jolt'); void this.faceEl.offsetWidth; this.faceEl.classList.add(c);
+    }
+    if(ms) this.moodT=setTimeout(()=>this.mood('normal'),ms);
+  }
   saveOpt(){ try{ localStorage.setItem('bd_opt_'+this.id,JSON.stringify(this.opt)); }catch(_){} }
   setChar(ch){
     this.ch=ch;
-    this.cnameEl.innerHTML=`${avatar(ch,20)}<span>${ch.flag} ${ch.name}</span>`;
+    this.cnameEl.innerHTML=`<span>${ch.flag} ${ch.name}</span>`;
+    this.curMood=null; this.mood('normal');
     this.spLabel.textContent=`${ch.emo} ${ch.spName}`;
   }
   reset(){
@@ -570,6 +607,7 @@ class Player{
     this.gauge=0; this.shieldT=0; this.feverT=0; this.blindT=0; this.hasteT=0;
     this.reflectT=0; this.freezeT=0; this.bank=0; this.forced=[];
     this.root.classList.remove('loser'); this.say('');
+    if(this.faceEl&&this.curMood!==null) this.mood('normal');
     this.updateHud();
   }
   say(html){ this.msgEl.innerHTML=html; }
@@ -632,7 +670,7 @@ class Player{
       }
       if(atk>0&&this.bank){ atk+=this.bank; this.bank=0; }
       SFX.clear(n);
-      if(atk>0){ SFX.attack(atk); this.opp.receive(atk); this.pop(`공격 +${atk}`); }
+      if(atk>0){ SFX.attack(atk); this.mood('happy',1400); this.opp.receive(atk); this.pop(`공격 +${atk}`); }
       else if(n>=2) this.pop('상쇄!');
     }else{
       this.combo=0;
@@ -645,20 +683,20 @@ class Player{
   }
   receive(n,reflected){
     if(this.dead) return;
-    if(this.shieldT>0){ SFX.block(); this.pop('🛡️ 막음'); return; }
-    if(this.ch.id==='iron'){ n=Math.max(0,n-1); if(!n){ SFX.block(); this.pop('🛡️ 막음'); return; } }
+    if(this.shieldT>0){ SFX.block(); this.mood('happy',1200); this.pop('🛡️ 막음'); return; }
+    if(this.ch.id==='iron'){ n=Math.max(0,n-1); if(!n){ SFX.block(); this.mood('happy',1200); this.pop('🛡️ 막음'); return; } }
     if(this.ch.id==='echo'&&!reflected){
-      if(this.reflectT>0){ this.opp.receive(n,true); this.pop(`🪞 ${n}줄 반사`); return; }
-      if(Math.random()<0.3){ this.opp.receive(1,true); this.pop('🪞 1줄 반사'); n--; if(!n) return; }
+      if(this.reflectT>0){ this.opp.receive(n,true); this.mood('happy',1200); this.pop(`🪞 ${n}줄 반사`); return; }
+      if(Math.random()<0.3){ this.opp.receive(1,true); this.mood('happy',1200); this.pop('🪞 1줄 반사'); n--; if(!n) return; }
     }
-    this.pending+=n; this.charge(1); this.updateHud();
+    this.pending+=n; this.charge(1); this.updateHud(); this.mood('shock',1500);
   }
   addGarbage(n){
     const hole=Math.floor(Math.random()*COLS);
     const removed=this.grid.splice(0,n);
     for(let i=0;i<n;i++) this.grid.push(Array.from({length:COLS},(_,x)=>x===hole?null:'G'));
     this.wrap.classList.remove('shake'); void this.wrap.offsetWidth; this.wrap.classList.add('shake');
-    SFX.hit(n);
+    SFX.hit(n); this.mood('shock',1500);
     if(navigator.vibrate && !(mode==='cpu'&&this.id===1)) try{ navigator.vibrate(60); }catch(_){}
     if(removed.some(r=>r.some(v=>v))) this.die();
   }
@@ -685,7 +723,7 @@ class Player{
       case 'titan': o.receive(3); o.pop('🪨 충격파!'); if(o.cur&&!o.dead) o.hard(); break;
       case 'aurora': o.freezeT=4000; o.receive(1); o.pop('❄️ 빙결!'); break;
     }
-    SFX.special(); this.pop(`${this.ch.emo} ${this.ch.spName}!`); this.flashT=200; this.updateHud();
+    SFX.special(); this.mood('happy',1500); this.pop(`${this.ch.emo} ${this.ch.spName}!`); this.flashT=200; this.updateHud();
   }
   die(){ if(this.dead) return; this.dead=true; gameOver(this); }
   pop(text){
@@ -931,7 +969,7 @@ function renderPicker(p){
     <div class="pk-head disp">${who} 캐릭터 선택</div>
     <div class="pk-grid">${CHARS.map(c=>`<button class="ch${c.id===sel.id?' sel':''}" data-id="${c.id}" style="--c:${c.c}">
       ${avatar(c,34)}<span class="fl">${c.flag}</span><span>${c.name}</span><small>${c.type}</small></button>`).join('')}</div>
-    <div class="pk-info"><div class="pk-who">${avatar(sel,38)}<div><b>${sel.name}</b> · ${sel.type}<br>
+    <div class="pk-info"><div class="pk-who">${avatar(sel,38,'happy')}<div><b>${sel.name}</b> · ${sel.type}<br>
       <span class="sub">${sel.flag} ${sel.nat} · ${sel.who} (${sel.g==='m'?'남':'여'})</span></div></div>
       <span class="k">특성</span> ${sel.passive}<br>
       <span class="k">필살기 · ${sel.spName}</span> (${sel.need}줄 충전) ${sel.special}</div>
@@ -977,6 +1015,7 @@ function gameOver(loser){
   winner.say(`<div class="big">승리!</div><div class="sm">${winner.lines}줄 · 전적 ${wins[winner.id]} : ${wins[loser.id]}</div>`);
   loser.say(`<div class="big">패배</div><div class="sm">${loser.lines}줄 · 전적 ${wins[loser.id]} : ${wins[winner.id]}</div>`);
   loser.root.classList.add('loser');
+  winner.mood('happy'); loser.mood('shock');
   const title = mode==='cpu' ? (youWin?'<span class="b">승리!</span>':'<span class="a">CPU 승리</span>')
                              : `<span class="${winner.id===1?'a':'b'}">P${winner.id} 승리</span>`;
   const score = mode==='cpu' ? `나 ${wins[2]} : ${wins[1]} CPU Lv.${cpuLvl}` : `P1 ${wins[1]} : ${wins[2]} P2`;

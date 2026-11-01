@@ -111,7 +111,7 @@ body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{visibility:hidden}
 .pk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
 .ch{border:2px solid transparent;border-radius:12px;background:var(--bg);padding:5px 2px;
   display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;font-weight:700}
-.ch{position:relative;font-size:11px;white-space:nowrap}
+.ch{position:relative;font-size:11px;white-space:normal;word-break:keep-all;text-align:center;line-height:1.15}
 .ch svg{display:block;border-radius:50%}
 .ch .fl{position:absolute;top:2px;right:3px;font-size:12px;line-height:1}
 .ch small{font-weight:400;color:var(--muted);font-size:10px}
@@ -123,6 +123,11 @@ body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{visibility:hidden}
 .pk-info{font-size:12px;line-height:1.55;background:var(--bg);border-radius:10px;padding:8px 10px;flex:1;min-height:max-content}
 .pk-info b{font-size:14px}
 .pk-info .k{color:var(--pc);font-weight:700}
+.pk-name{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;font-weight:700;color:var(--muted)}
+.pk-name input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit;font-size:14px;
+  color:var(--ink);background:var(--panel);-webkit-user-select:text;user-select:text;touch-action:manipulation}
+.pk-name input:focus{outline:2px solid var(--pc);border-color:transparent}
+.pk-back{background:transparent;color:var(--pc);border:1.5px solid var(--pc)}
 .pk-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:none}
 .opt{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);font-weight:700;min-width:0}
 .seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:2px}
@@ -182,7 +187,7 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   .face{width:68px;height:68px}
   .pname{font-size:26px} .cname{font-size:16px} .lines,.wins,.status{font-size:14px}
   .pk-grid{gap:8px} .ch{font-size:13px;padding:8px 2px} .pk-info{font-size:14px} .pk-go{padding:15px;font-size:17px}
-  .opt{font-size:13px} .seg button{font-size:15px;padding:11px 4px} .opt small{font-size:12px}
+  .opt{font-size:13px} .pk-name{font-size:13px} .pk-name input{font-size:17px;padding:10px 12px} .seg button{font-size:15px;padding:11px 4px} .opt small{font-size:12px}
   .mid{height:52px} .mid button{height:44px;font-size:16px} .mid button.ic{width:44px;font-size:20px}
 }
 /* 터치 기기를 가로로 들면 세로로 돌려달라고 안내 */
@@ -228,7 +233,8 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
     <span class="lv top" id="lvTop">LV 1</span>
     <button id="homeBtn" class="ic" aria-label="처음 화면으로">🏠</button>
     <button id="bgmBtn" class="ic" aria-label="배경음악 켜기/끄기">🎵</button>
-    <button id="pauseBtn">일시정지</button>
+    <button id="fsBtn" class="ic" aria-label="전체화면">⛶</button>
+    <button id="pauseBtn" class="ic" aria-label="일시정지">⏸</button>
     <button id="sfxBtn" class="ic" aria-label="효과음 켜기/끄기">🔊</button>
     <span class="lv" id="lv">LV 1</span>
   </div>
@@ -279,37 +285,37 @@ const COLORS = {I:'#ff8fb8',O:'#ffd23f',T:'#3ddc97',S:'#4d9de0',Z:'#ff6f59',J:'#
 
 /* ===== 캐릭터 ===== */
 const CHARS = [
-  {id:'blaze', eye:'#3b2416', name:'블레이즈', who:'강민호', nat:'한국', flag:'🇰🇷', g:'m', emo:'🔥', c:'#ff5a3c', type:'공격형',
+  {id:'blaze', eye:'#3b2416', name:'송진환', nick:'블레이즈', nat:'한국', flag:'🇰🇷', g:'m', emo:'🔥', c:'#ff5a3c', type:'공격형',
    skin:'#f2cfac', hair:'#1c1410', hs:'side',
    passive:'3줄 동시 제거 시 5줄 공격, 4줄 제거 시 6줄 공격', spName:'화염탄', special:'상대에게 즉시 방해 줄 4줄', need:12,
    atk:[0,0,1,5,6]},
-  {id:'iron', eye:'#4f9a4a', name:'아이언', who:'잭 밀러', nat:'미국', flag:'🇺🇸', g:'m', emo:'🛡️', c:'#7c8aa5', type:'방어형',
+  {id:'iron', eye:'#4f9a4a', name:'잭 밀러', nick:'아이언', nat:'미국', flag:'🇺🇸', g:'m', emo:'🛡️', c:'#7c8aa5', type:'방어형',
    skin:'#f5d3bb', hair:'#a8743a', hs:'short',
    passive:'받는 공격이 매번 1줄씩 줄어듦', spName:'철벽', special:'10초 동안 모든 공격 무효', need:10},
-  {id:'beat', eye:'#2b1a10', name:'비트', who:'첸 하오', nat:'중국', flag:'🇨🇳', g:'m', emo:'🎵', c:'#b05cff', type:'콤보형',
+  {id:'beat', eye:'#2b1a10', name:'첸 하오', nick:'비트', nat:'중국', flag:'🇨🇳', g:'m', emo:'🎵', c:'#b05cff', type:'콤보형',
    skin:'#efc9a2', hair:'#151010', hs:'spiky',
    passive:'연속으로 줄을 지울 때마다 추가 공격 +1 (최대 +5)', spName:'피버', special:'8초 동안 공격력 2배', need:10},
-  {id:'hawk', eye:'#4aa3e8', name:'호크', who:'니콜라이 볼코프', nat:'러시아', flag:'🇷🇺', g:'m', emo:'🎯', c:'#19b6d4', type:'견제형',
+  {id:'hawk', eye:'#4aa3e8', name:'니콜라이 볼코프', nick:'호크', nat:'러시아', flag:'🇷🇺', g:'m', emo:'🎯', c:'#19b6d4', type:'견제형',
    skin:'#f7dccb', hair:'#d8bf86', hs:'buzz',
    passive:'1줄만 지워도 상대에게 1줄 공격', spName:'눈가림', special:'상대의 그림자·다음 블록을 8초간 숨기고 2줄 공격', need:11,
    atk:[0,1,1,2,3]},
-  {id:'chrono', eye:'#5a3420', name:'크로노', who:'윤서아', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'속도형',
+  {id:'chrono', eye:'#5a3420', name:'송효양', nick:'크로노', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'속도형',
    skin:'#f4d2b2', hair:'#2a1a12', hs:'long',
    passive:'내 블록이 25% 느리게 떨어짐', spName:'가속', special:'8초 동안 상대 블록이 3배 빨리 떨어짐', need:8},
-  {id:'leaf', eye:'#2b1a10', name:'리프', who:'사토 하나', nat:'일본', flag:'🇯🇵', g:'f', emo:'🌿', c:'#3ddc97', type:'회복형',
+  {id:'leaf', eye:'#2b1a10', name:'사토 하나', nick:'리프', nat:'일본', flag:'🇯🇵', g:'f', emo:'🌿', c:'#3ddc97', type:'회복형',
    skin:'#f3d0b0', hair:'#1a1210', hs:'bob',
    passive:'3줄 이상 동시 제거 시 내 방해 줄 2줄 삭제', spName:'정화', special:'내 방해 줄 4줄 삭제 + 대기 중인 공격 모두 제거', need:10},
-  {id:'echo', eye:'#3b2416', name:'에코', who:'아난 분마', nat:'태국', flag:'🇹🇭', g:'m', emo:'🪞', c:'#ff7ab8', type:'반격형',
+  {id:'echo', eye:'#3b2416', name:'아난 분마', nick:'에코', nat:'태국', flag:'🇹🇭', g:'m', emo:'🪞', c:'#ff7ab8', type:'반격형',
    skin:'#d6a379', hair:'#120e0c', hs:'short',
    passive:'공격을 받을 때 30% 확률로 1줄을 상대에게 되돌려 보냄', spName:'반사', special:'6초 동안 받는 공격을 전부 상대에게 되돌림', need:10},
-  {id:'prism', eye:'#9a7a32', name:'프리즘', who:'클레르 뒤부아', nat:'프랑스', flag:'🇫🇷', g:'f', emo:'💎', c:'#5b8cff', type:'전략형',
+  {id:'prism', eye:'#9a7a32', name:'클레르 뒤부아', nick:'프리즘', nat:'프랑스', flag:'🇫🇷', g:'f', emo:'💎', c:'#5b8cff', type:'전략형',
    skin:'#f4d4bf', hair:'#7a4424', hs:'pony',
    passive:'4줄 동시 제거 시 필살기 게이지 추가 충전', spName:'프리즘', special:'다음 블록 3개가 모두 긴 막대(I) 블록', need:8},
-  {id:'titan', eye:'#2a1810', name:'타이탄', who:'코피 멘사', nat:'가나', flag:'🇬🇭', g:'m', emo:'🪨', c:'#e0892b', type:'파워형',
+  {id:'titan', eye:'#2a1810', name:'코피 멘사', nick:'타이탄', nat:'가나', flag:'🇬🇭', g:'m', emo:'🪨', c:'#e0892b', type:'파워형',
    skin:'#6b4429', hair:'#0e0a08', hs:'curly',
    passive:'2줄 제거부터 2줄 공격, 3줄 제거 시 3줄 공격', spName:'충격파', special:'상대에게 3줄 공격 + 상대 블록을 그 자리에서 강제 낙하', need:12,
    atk:[0,0,2,3,4]},
-  {id:'aurora', eye:'#3b2214', name:'오로라', who:'마야 톰슨', nat:'캐나다', flag:'🇨🇦', g:'f', emo:'❄️', c:'#2ec4c4', type:'역습형',
+  {id:'aurora', eye:'#3b2214', name:'마야 톰슨', nick:'오로라', nat:'캐나다', flag:'🇨🇦', g:'f', emo:'❄️', c:'#2ec4c4', type:'역습형',
    skin:'#7d5236', hair:'#1a120d', hs:'afro',
    passive:'상쇄한 방해 줄을 모아두었다가 다음 공격에 더함 (최대 6)', spName:'빙결', special:'상대 조작을 4초 동안 얼림 + 1줄 공격', need:10},
 ];
@@ -542,6 +548,22 @@ const Snd=(()=>{
   };
 })();
 const SFX=Snd.sfx, Music=Snd.music;
+/* 전체화면: 게임을 시작하는 버튼을 누를 때 자동으로 들어감 */
+const FS={
+  el:document.documentElement,
+  can(){ return !!(this.el.requestFullscreen||this.el.webkitRequestFullscreen); },
+  is(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); },
+  enter(){
+    try{
+      if(this.is()||!this.can()) return;
+      const r=(this.el.requestFullscreen||this.el.webkitRequestFullscreen).call(this.el,{navigationUI:'hide'});
+      const lock=()=>{ try{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{}); }catch(_){} };
+      if(r&&r.then) r.then(lock).catch(()=>{}); else lock();
+    }catch(_){}
+  },
+  exit(){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(_){} },
+  toggle(){ this.is()?this.exit():this.enter(); }
+};
 const Wake=(()=>{ let lock=null;
   return {
     async on(){ try{ if(!lock&&navigator.wakeLock){ lock=await navigator.wakeLock.request('screen'); lock.addEventListener('release',()=>{lock=null;}); } }catch(_){ lock=null; } },
@@ -556,6 +578,9 @@ function loadOpt(id){
   try{ const v=JSON.parse(localStorage.getItem('bd_opt_'+id)||'null'); if(v) return {...d,...v}; }catch(_){}
   return d;
 }
+
+function esc(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function loadNames(id){ try{ return JSON.parse(localStorage.getItem('bd_names_'+id)||'{}')||{}; }catch(_){ return {}; } }
 
 /* ===== 플레이어 ===== */
 class Player{
@@ -574,7 +599,7 @@ class Player{
     this.faceEl=root.querySelector('.face'); this.curMood=null; this.moodT=null;
     this.sides=root.querySelectorAll(':scope > .side');
     this.ctrlEl=root.querySelector('.ctrl'); this.rctrlEl=root.querySelector('.rctrl');
-    this.opt=loadOpt(id); this.applyOpt();
+    this.opt=loadOpt(id); this.applyOpt(); this.names=loadNames(id);
     this.ch=CHARS[0]; this.cs=16; this.statusTxt=''; this.reset();
   }
   applyOpt(){
@@ -593,10 +618,13 @@ class Player{
     }
     if(ms) this.moodT=setTimeout(()=>this.mood('normal'),ms);
   }
+  nameFor(cid){ const n=(this.names[cid]||'').trim(); return n||CMAP[cid].name; }
+  dispName(){ return (mode==='cpu'&&this.id===1) ? this.ch.name : this.nameFor(this.ch.id); }
+  saveNames(){ try{ localStorage.setItem('bd_names_'+this.id,JSON.stringify(this.names)); }catch(_){} }
   saveOpt(){ try{ localStorage.setItem('bd_opt_'+this.id,JSON.stringify(this.opt)); }catch(_){} }
   setChar(ch){
     this.ch=ch;
-    this.cnameEl.innerHTML=`<span>${ch.flag} ${ch.name}</span>`;
+    this.cnameEl.innerHTML=`<span>${ch.flag} ${esc(this.dispName())}</span>`;
     this.curMood=null; this.mood('normal');
     this.spLabel.textContent=`${ch.emo} ${ch.spName}`;
   }
@@ -907,11 +935,11 @@ const LVCOL=['','#3ddc97','#3ddc97','#3ddc97','#4d9de0','#4d9de0','#4d9de0','#ff
 
 const actions={
   menu(){ menu(); },
-  pvp(){ mode='pvp'; wins={1:0,2:0}; updateScore(); hideCard(); openPickers(); },
-  cpu(){ cpuSetup(); },
-  cpuNext(){ mode='cpu'; wins={1:0,2:0}; updateScore(); hideCard(); openPickers(); },
-  resume(){ hideCard(); state='playing'; Music.start(); Wake.on(); },
-  restart(){ hideCard(); startGame(); },
+  pvp(){ FS.enter(); mode='pvp'; wins={1:0,2:0}; updateScore(); hideCard(); openPickers(); },
+  cpu(){ FS.enter(); cpuSetup(); },
+  cpuNext(){ FS.enter(); mode='cpu'; wins={1:0,2:0}; updateScore(); hideCard(); openPickers(); },
+  resume(){ FS.enter(); hideCard(); state='playing'; Music.start(); Wake.on(); },
+  restart(){ FS.enter(); hideCard(); startGame(); },
   repick(){ hideCard(); openPickers(); },
 };
 
@@ -931,7 +959,7 @@ function menu(){
     <div class="modes">
       <button class="mode" data-go="pvp"><b>👥 둘이서 대결</b><span>폰을 눕히고 위·아래 끝에 마주 앉아요</span></button>
       <button class="mode" data-go="cpu"><b>🤖 컴퓨터와 대결</b><span>난이도 1~10 중에서 골라요</span></button>
-    </div>`);
+    </div>${FS.can()?'':`<p style="margin:12px 0 0;font-size:12px">이 기기는 브라우저 전체화면을 지원하지 않아요.<br>공유 → <b>홈 화면에 추가</b>로 열면 전체화면으로 플레이돼요.</p>`}`);
 }
 function cpuSetup(){
   const grid=Array.from({length:10},(_,i)=>`<button class="lvb${i+1===cpuLvl?' sel':''}" data-lv="${i+1}" style="--c:${LVCOL[i+1]}">${i+1}</button>`).join('');
@@ -954,7 +982,7 @@ function openPickers(){
     const ch=CHARS[Math.floor(Math.random()*CHARS.length)];
     picks[1]=ch.id; P1.setChar(ch); readyFlags[1]=true;
     P1.picker.classList.add('hidden');
-    P1.say(`${avatar(ch,72)}<div class="sm">CPU Lv.${cpuLvl} · ${ch.flag} ${ch.name}</div>`);
+    P1.say(`${avatar(ch,72)}<div class="sm">CPU Lv.${cpuLvl} · ${ch.flag} ${esc(ch.name)}</div>`);
     renderPicker(P2);
   }else{
     renderPicker(P1); renderPicker(P2);
@@ -968,9 +996,10 @@ function renderPicker(p){
   p.picker.innerHTML=`
     <div class="pk-head disp">${who} 캐릭터 선택</div>
     <div class="pk-grid">${CHARS.map(c=>`<button class="ch${c.id===sel.id?' sel':''}" data-id="${c.id}" style="--c:${c.c}">
-      ${avatar(c,34)}<span class="fl">${c.flag}</span><span>${c.name}</span><small>${c.type}</small></button>`).join('')}</div>
-    <div class="pk-info"><div class="pk-who">${avatar(sel,38,'happy')}<div><b>${sel.name}</b> · ${sel.type}<br>
-      <span class="sub">${sel.flag} ${sel.nat} · ${sel.who} (${sel.g==='m'?'남':'여'})</span></div></div>
+      ${avatar(c,34)}<span class="fl">${c.flag}</span><span class="nm">${esc(p.nameFor(c.id))}</span><small>${c.type}</small></button>`).join('')}</div>
+    <div class="pk-info"><div class="pk-who">${avatar(sel,38,'happy')}<div><b class="pk-nm">${esc(p.nameFor(sel.id))}</b> · ${sel.type}<br>
+      <span class="sub">${sel.flag} ${sel.nat} · ${sel.g==='m'?'남':'여'}</span></div></div>
+      <label class="pk-name">이름 바꾸기<input type="text" maxlength="8" autocomplete="off" placeholder="${esc(sel.name)}" value="${esc(p.names[sel.id]||'')}"></label>
       <span class="k">특성</span> ${sel.passive}<br>
       <span class="k">필살기 · ${sel.spName}</span> (${sel.need}줄 충전) ${sel.special}</div>
     <div class="pk-opts">
@@ -982,15 +1011,31 @@ function renderPicker(p){
         <small>${p.opt.ghost?'블록이 떨어질 자리 표시':'표시 안 함 (고수용)'}</small></div>
     </div>
     <button class="pk-go">이 캐릭터로 준비</button>`;
+  const inp=p.picker.querySelector('.pk-name input');
+  inp.addEventListener('input',()=>{
+    p.names[sel.id]=inp.value; p.saveNames();
+    const nm=p.nameFor(sel.id);
+    p.picker.querySelector('.pk-nm').textContent=nm;
+    p.picker.querySelector(`.ch[data-id="${sel.id}"] .nm`).textContent=nm;
+  });
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); });
   p.picker.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click',()=>{
     p.opt[b.dataset.opt]=b.dataset.v==='1'; p.saveOpt(); p.applyOpt(); renderPicker(p);
   }));
   p.picker.classList.remove('hidden');
   p.picker.querySelectorAll('.ch').forEach(b=>b.addEventListener('click',()=>{ picks[p.id]=b.dataset.id; renderPicker(p); }));
   p.picker.querySelector('.pk-go').addEventListener('click',()=>{
+    FS.enter();
     readyFlags[p.id]=true; p.setChar(CMAP[picks[p.id]]);
     if(readyFlags[1]&&readyFlags[2]){ closePickers(); startGame(); }
-    else p.picker.innerHTML=`<div class="pk-head disp">${sel.name} 준비 완료</div><div style="display:flex;justify-content:center">${avatar(sel,72)}</div><div class="pk-wait">상대가 캐릭터를 고르는 중이에요…</div>`;
+    else{
+      // 먼저 준비한 사람도 상대가 고르기 전까지는 캐릭터·이름을 다시 바꿀 수 있음
+      p.picker.innerHTML=`<div class="pk-head disp">${esc(p.dispName())} 준비 완료</div>
+        <div style="display:flex;justify-content:center">${avatar(sel,72,'happy')}</div>
+        <div class="pk-wait">상대가 캐릭터를 고르는 중이에요…<br>그 전까지는 다시 바꿀 수 있어요.</div>
+        <button class="pk-go pk-back">↩ 캐릭터·이름 다시 고르기</button>`;
+      p.picker.querySelector('.pk-back').addEventListener('click',()=>{ if(state!=='select') return; readyFlags[p.id]=false; renderPicker(p); });
+    }
   });
 }
 
@@ -1002,7 +1047,7 @@ function startGame(){
     if(state!=='count') return;
     if(n===0){ players.forEach(p=>{p.say('');p.spawn();}); state='playing'; SFX.go(); Music.reset(); Music.start(); Wake.on(); return; }
     SFX.count();
-    players.forEach(p=>p.say(`<div class="big pulse">${n}</div><div class="sm">${p.ch.flag} ${p.ch.name}</div>`)); n--; setTimeout(tick,700);
+    players.forEach(p=>p.say(`<div class="big pulse">${n}</div><div class="sm">${p.ch.flag} ${esc(p.dispName())}</div>`)); n--; setTimeout(tick,700);
   };
   tick();
 }
@@ -1017,9 +1062,9 @@ function gameOver(loser){
   loser.root.classList.add('loser');
   winner.mood('happy'); loser.mood('shock');
   const title = mode==='cpu' ? (youWin?'<span class="b">승리!</span>':'<span class="a">CPU 승리</span>')
-                             : `<span class="${winner.id===1?'a':'b'}">P${winner.id} 승리</span>`;
-  const score = mode==='cpu' ? `나 ${wins[2]} : ${wins[1]} CPU Lv.${cpuLvl}` : `P1 ${wins[1]} : ${wins[2]} P2`;
-  setTimeout(()=>{ if(state!=='over') return; showCard(`<div class="mirror">P${winner.id} 승리 · 한 판 더?</div>
+                             : `<span class="${winner.id===1?'a':'b'}">${esc(winner.dispName())} 승리</span>`;
+  const score = mode==='cpu' ? `나 ${wins[2]} : ${wins[1]} CPU Lv.${cpuLvl}` : `${esc(P1.dispName())} ${wins[1]} : ${wins[2]} ${esc(P2.dispName())}`;
+  setTimeout(()=>{ if(state!=='over') return; showCard(`<div class="mirror">${esc(winner.dispName())} 승리 · 한 판 더?</div>
     <h1 class="disp">${title}</h1><p>${score}</p>
     <div class="btns"><button class="btn" data-go="restart">한 판 더</button><button class="btn ghost" data-go="repick">캐릭터 변경</button><button class="btn ghost" data-go="menu">처음으로</button></div>`, actions.restart); }, 1400);
 }
@@ -1034,6 +1079,12 @@ function setLv(l){ $('#lv').textContent='LV '+l; $('#lvTop').textContent='LV '+l
 
 $('#pauseBtn').addEventListener('click',pause);
 $('#homeBtn').addEventListener('click',askHome);
+const fsBtn=$('#fsBtn');
+if(!FS.can()) fsBtn.style.display='none';
+fsBtn.addEventListener('click',()=>FS.toggle());
+function onFs(){ fsBtn.textContent=FS.is()?'🗗':'⛶'; if(!FS.is()) pause(); setTimeout(fitAll,120); }
+document.addEventListener('fullscreenchange',onFs);
+document.addEventListener('webkitfullscreenchange',onFs);
 function askHome(){
   if(state==='menu') return;
   if(state!=='playing'&&state!=='paused'){ hideCard(); menu(); return; } // 선택·카운트다운·결과 화면은 바로 이동
@@ -1076,6 +1127,7 @@ function releaseAll(){ Object.keys(reps).forEach(release); document.querySelecto
 const KEYS={KeyA:[1,'L'],KeyD:[1,'R'],KeyW:[1,'U'],KeyS:[1,'D'],Space:[1,'H'],KeyE:[1,'S'],
   ArrowLeft:[2,'L'],ArrowRight:[2,'R'],ArrowUp:[2,'U'],ArrowDown:[2,'D'],Enter:[2,'H'],NumpadEnter:[2,'H'],Slash:[2,'S'],ShiftRight:[2,'S']};
 addEventListener('keydown',e=>{
+  if(e.target&&e.target.tagName==='INPUT') return;
   if(e.code==='Escape'||e.code==='KeyP'){ if(state==='playing') pause(); else if(state==='paused') actions.resume(); return; }
   if(state!=='playing'&&(e.code==='Enter'||e.code==='Space')&&primaryAction){ e.preventDefault(); primaryAction(); return; }
   const k=KEYS[e.code]; if(!k) return;

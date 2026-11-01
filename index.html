@@ -117,6 +117,12 @@ body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{visibility:hidden}
 .pk-info{font-size:12px;line-height:1.55;background:var(--bg);border-radius:10px;padding:8px 10px;flex:1;min-height:max-content}
 .pk-info b{font-size:14px}
 .pk-info .k{color:var(--pc);font-weight:700}
+.pk-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:none}
+.opt{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);font-weight:700;min-width:0}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 2px;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--pc);color:#fff}
+.opt small{font-weight:400;font-size:10px}
 .pk-go{border:0;border-radius:12px;padding:11px;font-weight:700;font-size:15px;background:var(--pc);color:#fff;flex:none}
 .pk-wait{font-size:14px;color:var(--muted);text-align:center;padding:10px}
 
@@ -169,6 +175,7 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   .pads{gap:8px}
   .pname{font-size:26px} .cname{font-size:16px} .lines,.wins,.status{font-size:14px}
   .pk-grid{gap:8px} .ch{font-size:13px;padding:8px 2px} .pk-info{font-size:14px} .pk-go{padding:15px;font-size:17px}
+  .opt{font-size:13px} .seg button{font-size:15px;padding:11px 4px} .opt small{font-size:12px}
   .mid{height:52px} .mid button{height:44px;font-size:16px} .mid button.ic{width:44px;font-size:20px}
 }
 /* 터치 기기를 가로로 들면 세로로 돌려달라고 안내 */
@@ -508,6 +515,13 @@ const Wake=(()=>{ let lock=null;
 })();
 ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,()=>Snd.ensure(),{passive:true}));
 
+/* ===== 플레이어별 설정 (조작 손, 착지 미리보기) ===== */
+function loadOpt(id){
+  const d={lefty:false,ghost:true};
+  try{ const v=JSON.parse(localStorage.getItem('bd_opt_'+id)||'null'); if(v) return {...d,...v}; }catch(_){}
+  return d;
+}
+
 /* ===== 플레이어 ===== */
 class Player{
   constructor(id,root){
@@ -522,8 +536,18 @@ class Player{
     this.statusEl=root.querySelector('.status'); this.spBtn=root.querySelector('.pad.sp');
     this.spFill=this.spBtn.querySelector('.fill'); this.spLabel=this.spBtn.querySelector('span');
     this.picker=root.querySelector('.picker');
+    this.sides=root.querySelectorAll(':scope > .side');
+    this.ctrlEl=root.querySelector('.ctrl'); this.rctrlEl=root.querySelector('.rctrl');
+    this.opt=loadOpt(id); this.applyOpt();
     this.ch=CHARS[0]; this.cs=16; this.statusTxt=''; this.reset();
   }
+  applyOpt(){
+    const [ls,rs]=this.sides;
+    // 오른손잡이: 왼쪽 이동·필살기 / 오른쪽 회전·낙하  ↔  왼손잡이: 반대로
+    if(this.opt.lefty){ ls.appendChild(this.rctrlEl); rs.appendChild(this.ctrlEl); }
+    else{ ls.appendChild(this.ctrlEl); rs.appendChild(this.rctrlEl); }
+  }
+  saveOpt(){ try{ localStorage.setItem('bd_opt_'+this.id,JSON.stringify(this.opt)); }catch(_){} }
   setChar(ch){
     this.ch=ch;
     this.cnameEl.innerHTML=`${avatar(ch,20)}<span>${ch.flag} ${ch.name}</span>`;
@@ -718,7 +742,7 @@ class Player{
     }
     const c=this.cur;
     if(c){
-      if(this.blindT<=0){
+      if(this.blindT<=0&&this.opt.ghost){
         const gy=this.ghostY();
         c.m.forEach((r,ry)=>r.forEach((v,rx)=>{ if(v&&gy+ry>=0) drawCell(ctx,c.x+rx,gy+ry,s,COLORS[c.t],'ghost'); }));
       }
@@ -901,7 +925,18 @@ function renderPicker(p){
       <span class="sub">${sel.flag} ${sel.nat} · ${sel.who} (${sel.g==='m'?'남':'여'})</span></div></div>
       <span class="k">특성</span> ${sel.passive}<br>
       <span class="k">필살기 · ${sel.spName}</span> (${sel.need}줄 충전) ${sel.special}</div>
+    <div class="pk-opts">
+      <div class="opt">조작 손
+        <div class="seg"><button data-opt="lefty" data-v="0" class="${p.opt.lefty?'':'on'}">오른손잡이</button><button data-opt="lefty" data-v="1" class="${p.opt.lefty?'on':''}">왼손잡이</button></div>
+        <small>${p.opt.lefty?'회전·낙하 버튼이 왼쪽':'회전·낙하 버튼이 오른쪽'}</small></div>
+      <div class="opt">착지 미리보기
+        <div class="seg"><button data-opt="ghost" data-v="1" class="${p.opt.ghost?'on':''}">보이기</button><button data-opt="ghost" data-v="0" class="${p.opt.ghost?'':'on'}">숨기기</button></div>
+        <small>${p.opt.ghost?'블록이 떨어질 자리 표시':'표시 안 함 (고수용)'}</small></div>
+    </div>
     <button class="pk-go">이 캐릭터로 준비</button>`;
+  p.picker.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click',()=>{
+    p.opt[b.dataset.opt]=b.dataset.v==='1'; p.saveOpt(); p.applyOpt(); renderPicker(p);
+  }));
   p.picker.classList.remove('hidden');
   p.picker.querySelectorAll('.ch').forEach(b=>b.addEventListener('click',()=>{ picks[p.id]=b.dataset.id; renderPicker(p); }));
   p.picker.querySelector('.pk-go').addEventListener('click',()=>{

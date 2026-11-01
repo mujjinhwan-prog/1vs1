@@ -126,7 +126,7 @@ body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{visibility:hidden}
 .pk-go{border:0;border-radius:12px;padding:11px;font-weight:700;font-size:15px;background:var(--pc);color:#fff;flex:none}
 .pk-wait{font-size:14px;color:var(--muted);text-align:center;padding:10px}
 
-.mid{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;height:40px}
+.mid{flex:none;display:flex;align-items:center;justify-content:center;gap:6px;height:40px}
 .mid .lv{font-size:12px;font-weight:700;color:var(--muted);min-width:40px;text-align:center}
 .mid .lv.top{transform:rotate(180deg)}
 body.vscpu .mid .lv.top{visibility:hidden}
@@ -218,6 +218,7 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
 
   <div class="mid">
     <span class="lv top" id="lvTop">LV 1</span>
+    <button id="homeBtn" class="ic" aria-label="처음 화면으로">🏠</button>
     <button id="bgmBtn" class="ic" aria-label="배경음악 켜기/끄기">🎵</button>
     <button id="pauseBtn">일시정지</button>
     <button id="sfxBtn" class="ic" aria-label="효과음 켜기/끄기">🔊</button>
@@ -269,37 +270,37 @@ const COLORS = {I:'#ff8fb8',O:'#ffd23f',T:'#3ddc97',S:'#4d9de0',Z:'#ff6f59',J:'#
 
 /* ===== 캐릭터 ===== */
 const CHARS = [
-  {id:'blaze', name:'블레이즈', who:'강민호', nat:'한국', flag:'🇰🇷', g:'m', emo:'🔥', c:'#ff5a3c', type:'공격형',
+  {id:'blaze', eye:'#3b2416', name:'블레이즈', who:'강민호', nat:'한국', flag:'🇰🇷', g:'m', emo:'🔥', c:'#ff5a3c', type:'공격형',
    skin:'#f2cfac', hair:'#1c1410', hs:'side',
    passive:'3줄 동시 제거 시 5줄 공격, 4줄 제거 시 6줄 공격', spName:'화염탄', special:'상대에게 즉시 방해 줄 4줄', need:12,
    atk:[0,0,1,5,6]},
-  {id:'iron', name:'아이언', who:'잭 밀러', nat:'미국', flag:'🇺🇸', g:'m', emo:'🛡️', c:'#7c8aa5', type:'방어형',
+  {id:'iron', eye:'#4f9a4a', name:'아이언', who:'잭 밀러', nat:'미국', flag:'🇺🇸', g:'m', emo:'🛡️', c:'#7c8aa5', type:'방어형',
    skin:'#f5d3bb', hair:'#a8743a', hs:'short',
    passive:'받는 공격이 매번 1줄씩 줄어듦', spName:'철벽', special:'10초 동안 모든 공격 무효', need:10},
-  {id:'beat', name:'비트', who:'첸 하오', nat:'중국', flag:'🇨🇳', g:'m', emo:'🎵', c:'#b05cff', type:'콤보형',
+  {id:'beat', eye:'#2b1a10', name:'비트', who:'첸 하오', nat:'중국', flag:'🇨🇳', g:'m', emo:'🎵', c:'#b05cff', type:'콤보형',
    skin:'#efc9a2', hair:'#151010', hs:'spiky',
    passive:'연속으로 줄을 지울 때마다 추가 공격 +1 (최대 +5)', spName:'피버', special:'8초 동안 공격력 2배', need:10},
-  {id:'hawk', name:'호크', who:'니콜라이 볼코프', nat:'러시아', flag:'🇷🇺', g:'m', emo:'🎯', c:'#19b6d4', type:'견제형',
+  {id:'hawk', eye:'#4aa3e8', name:'호크', who:'니콜라이 볼코프', nat:'러시아', flag:'🇷🇺', g:'m', emo:'🎯', c:'#19b6d4', type:'견제형',
    skin:'#f7dccb', hair:'#d8bf86', hs:'buzz',
    passive:'1줄만 지워도 상대에게 1줄 공격', spName:'눈가림', special:'상대의 그림자·다음 블록을 8초간 숨기고 2줄 공격', need:11,
    atk:[0,1,1,2,3]},
-  {id:'chrono', name:'크로노', who:'윤서아', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'속도형',
+  {id:'chrono', eye:'#5a3420', name:'크로노', who:'윤서아', nat:'한국', flag:'🇰🇷', g:'f', emo:'⏳', c:'#ffb000', type:'속도형',
    skin:'#f4d2b2', hair:'#2a1a12', hs:'long',
    passive:'내 블록이 25% 느리게 떨어짐', spName:'가속', special:'8초 동안 상대 블록이 3배 빨리 떨어짐', need:8},
-  {id:'leaf', name:'리프', who:'사토 하나', nat:'일본', flag:'🇯🇵', g:'f', emo:'🌿', c:'#3ddc97', type:'회복형',
+  {id:'leaf', eye:'#2b1a10', name:'리프', who:'사토 하나', nat:'일본', flag:'🇯🇵', g:'f', emo:'🌿', c:'#3ddc97', type:'회복형',
    skin:'#f3d0b0', hair:'#1a1210', hs:'bob',
    passive:'3줄 이상 동시 제거 시 내 방해 줄 2줄 삭제', spName:'정화', special:'내 방해 줄 4줄 삭제 + 대기 중인 공격 모두 제거', need:10},
-  {id:'echo', name:'에코', who:'아난 분마', nat:'태국', flag:'🇹🇭', g:'m', emo:'🪞', c:'#ff7ab8', type:'반격형',
+  {id:'echo', eye:'#3b2416', name:'에코', who:'아난 분마', nat:'태국', flag:'🇹🇭', g:'m', emo:'🪞', c:'#ff7ab8', type:'반격형',
    skin:'#d6a379', hair:'#120e0c', hs:'short',
    passive:'공격을 받을 때 30% 확률로 1줄을 상대에게 되돌려 보냄', spName:'반사', special:'6초 동안 받는 공격을 전부 상대에게 되돌림', need:10},
-  {id:'prism', name:'프리즘', who:'클레르 뒤부아', nat:'프랑스', flag:'🇫🇷', g:'f', emo:'💎', c:'#5b8cff', type:'전략형',
+  {id:'prism', eye:'#9a7a32', name:'프리즘', who:'클레르 뒤부아', nat:'프랑스', flag:'🇫🇷', g:'f', emo:'💎', c:'#5b8cff', type:'전략형',
    skin:'#f4d4bf', hair:'#7a4424', hs:'pony',
    passive:'4줄 동시 제거 시 필살기 게이지 추가 충전', spName:'프리즘', special:'다음 블록 3개가 모두 긴 막대(I) 블록', need:8},
-  {id:'titan', name:'타이탄', who:'코피 멘사', nat:'가나', flag:'🇬🇭', g:'m', emo:'🪨', c:'#e0892b', type:'파워형',
+  {id:'titan', eye:'#2a1810', name:'타이탄', who:'코피 멘사', nat:'가나', flag:'🇬🇭', g:'m', emo:'🪨', c:'#e0892b', type:'파워형',
    skin:'#6b4429', hair:'#0e0a08', hs:'curly',
    passive:'2줄 제거부터 2줄 공격, 3줄 제거 시 3줄 공격', spName:'충격파', special:'상대에게 3줄 공격 + 상대 블록을 그 자리에서 강제 낙하', need:12,
    atk:[0,0,2,3,4]},
-  {id:'aurora', name:'오로라', who:'마야 톰슨', nat:'캐나다', flag:'🇨🇦', g:'f', emo:'❄️', c:'#2ec4c4', type:'역습형',
+  {id:'aurora', eye:'#3b2214', name:'오로라', who:'마야 톰슨', nat:'캐나다', flag:'🇨🇦', g:'f', emo:'❄️', c:'#2ec4c4', type:'역습형',
    skin:'#7d5236', hair:'#1a120d', hs:'afro',
    passive:'상쇄한 방해 줄을 모아두었다가 다음 공격에 더함 (최대 6)', spName:'빙결', special:'상대 조작을 4초 동안 얼림 + 1줄 공격', need:10},
 ];
@@ -323,20 +324,29 @@ function avatar(ch,size){
     case 'afro':  back=[...Array(12)].map((_,i)=>{const a=Math.PI*(0.85+i*1.3/11);return `<circle cx="${(32+17*Math.cos(a)).toFixed(1)}" cy="${(30+15*Math.sin(a)).toFixed(1)}" r="8" fill="${H}"/>`}).join('')+`<circle cx="32" cy="26" r="15" fill="${H}"/>`;
                   front=`<path d="${bangs}" fill="${H}"/>`; break;
   }
-  const blush = ch.g==='f' ? `<circle cx="24.5" cy="37.5" r="2.2" fill="#ff8a8a" opacity=".35"/><circle cx="39.5" cy="37.5" r="2.2" fill="#ff8a8a" opacity=".35"/>` : '';
+  const E=ch.eye||'#3b2416', f=ch.g==='f';
+  const eye=(cx)=>`
+      <ellipse cx="${cx}" cy="34.5" rx="3.7" ry="4.4" fill="#fff" stroke="#2a1d16" stroke-width=".7"/>
+      <circle cx="${cx+0.3}" cy="35.2" r="2.7" fill="${E}"/>
+      <circle cx="${cx+0.3}" cy="35.4" r="1.35" fill="#140c08"/>
+      <circle cx="${cx+1.2}" cy="33.9" r="1" fill="#fff"/>
+      <circle cx="${cx-0.6}" cy="36.4" r=".45" fill="#fff" opacity=".9"/>`;
+  const lash = f ? `<path d="M22.6 32.2 L21.2 31.2 M22.9 33.3 L21.4 33" stroke="#2a1d16" stroke-width=".8" stroke-linecap="round"/>
+      <path d="M41.4 32.2 L42.8 31.2 M41.1 33.3 L42.6 33" stroke="#2a1d16" stroke-width=".8" stroke-linecap="round"/>` : '';
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
     <defs><clipPath id="${uid}"><circle cx="32" cy="32" r="32"/></clipPath></defs>
     <g clip-path="url(#${uid})">
       <rect width="64" height="64" fill="${ch.c}" opacity=".28"/>
       ${back}
-      <path d="M10 64 Q12 50 32 49 Q52 50 54 64Z" fill="${ch.c}"/>
-      <rect x="27" y="42" width="10" height="9" rx="3" fill="${S}"/>
-      <circle cx="19" cy="33" r="3" fill="${S}"/><circle cx="45" cy="33" r="3" fill="${S}"/>
-      <ellipse cx="32" cy="32" rx="13" ry="15" fill="${S}"/>
+      <path d="M12 64 Q14 51 32 50 Q50 51 52 64Z" fill="${ch.c}"/>
+      <rect x="28" y="44" width="8" height="8" rx="3" fill="${S}"/>
+      <circle cx="18.3" cy="34" r="2.8" fill="${S}"/><circle cx="45.7" cy="34" r="2.8" fill="${S}"/>
+      <ellipse cx="32" cy="33" rx="14.2" ry="14.6" fill="${S}"/>
       ${front}
-      <circle cx="27" cy="33.5" r="1.7" fill="#2a1d16"/><circle cx="37" cy="33.5" r="1.7" fill="#2a1d16"/>
-      ${blush}
-      <path d="M28 39.5 Q32 42.5 36 39.5" stroke="#2a1d16" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      ${eye(26.4)}${eye(37.6)}${lash}
+      <ellipse cx="22.6" cy="40.2" rx="2.6" ry="1.6" fill="#ff7f8f" opacity="${f?.45:.3}"/>
+      <ellipse cx="41.4" cy="40.2" rx="2.6" ry="1.6" fill="#ff7f8f" opacity="${f?.45:.3}"/>
+      <path d="M30 41 Q32 43.2 34 41" stroke="#2a1d16" stroke-width="1.3" fill="none" stroke-linecap="round"/>
     </g></svg>`;
 }
 
@@ -875,7 +885,7 @@ function setLabels(){
 }
 
 function menu(){
-  state='menu'; Music.stop(); closePickers(); players.forEach(p=>{p.reset(); p.say('');});
+  state='menu'; Music.stop(); Wake.off(); cpu=null; closePickers(); players.forEach(p=>{p.reset(); p.say('');});
   document.body.classList.remove('vscpu');
   showCard(`<div class="mirror">블록 대결 · 모드를 골라 주세요</div>
     <h1 class="disp"><span class="a">블록</span> <span class="b">대결</span></h1>
@@ -984,6 +994,15 @@ function updateScore(){ P1.winsEl.textContent=wins[1]; P2.winsEl.textContent=win
 function setLv(l){ $('#lv').textContent='LV '+l; $('#lvTop').textContent='LV '+l; }
 
 $('#pauseBtn').addEventListener('click',pause);
+$('#homeBtn').addEventListener('click',askHome);
+function askHome(){
+  if(state==='menu') return;
+  if(state!=='playing'&&state!=='paused'){ hideCard(); menu(); return; } // 선택·카운트다운·결과 화면은 바로 이동
+  if(state==='playing'){ state='paused'; releaseAll(); Music.stop(); Wake.off(); }
+  showCard(`<div class="mirror">처음 화면으로 갈까요?</div><h1 class="disp">처음으로</h1>
+    <p>진행 중인 판은 사라지고 모드 선택 화면으로 돌아가요.</p>
+    <div class="btns"><button class="btn" data-go="menu">처음으로</button><button class="btn ghost" data-go="resume">계속하기</button></div>`, actions.resume);
+}
 const bgmBtn=$('#bgmBtn'), sfxBtn=$('#sfxBtn');
 function syncSnd(){ bgmBtn.classList.toggle('off',!Snd.bgmOn); sfxBtn.classList.toggle('off',!Snd.sfxOn); sfxBtn.textContent=Snd.sfxOn?'🔊':'🔇'; }
 bgmBtn.addEventListener('click',()=>{ Snd.toggleBgm(); syncSnd(); });

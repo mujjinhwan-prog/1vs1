@@ -69,8 +69,9 @@ body.vscpu:not(.desk) #p1 .info{gap:1px}
 .player.colbtn .side{justify-content:flex-start}
 .player.colbtn .ctrl, .player.colbtn .rctrl{margin-top:auto;gap:var(--bg,10px)}
 .player.colbtn .ctrl > .pad, .player.colbtn .rctrl > .pad{width:100%;height:var(--bh,58px);font-size:calc(var(--bh,58px)*.4);padding:0;flex:none;grid-column:auto}
-.player.colbtn .pad.sp{font-size:calc(var(--bh,58px)*.3)}
-.player.colbtn .pad.sp .spn{display:none}
+.player.colbtn .pad.sp > span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-size:calc(var(--bh,58px)*.34);line-height:1}
+.player.colbtn .pad.sp .spn{display:block;font-size:11px;line-height:1.15;word-break:keep-all;text-align:center;padding:0 2px}
 .player.colbtn .cname{white-space:normal;line-height:1.2}
 .player.colbtn .face{width:44px;height:44px}
 .player.colbtn .pname{font-size:16px}
@@ -107,7 +108,9 @@ body.vscpu:not(.desk) #p1 .info{gap:1px}
 .pad.sp{position:relative;overflow:hidden;height:50px;font-size:15px;font-weight:700;
   background:var(--line);color:var(--muted)}
 .pad.sp .fill{position:absolute;left:0;bottom:0;top:0;width:0;background:color-mix(in srgb,var(--gold) 45%,transparent);transition:width .2s}
-.pad.sp span{position:relative}
+.pad.sp > span{position:relative}
+.pad.sp .spn{margin-left:3px}
+.player.colbtn .pad.sp .spn{margin-left:0}
 .pad.sp.ready{color:#1c1e3a;background:var(--gold);animation:glow 1s infinite alternate}
 @keyframes glow{from{box-shadow:0 0 0 0 var(--gold)}to{box-shadow:0 0 14px 2px var(--gold)}}
 @media (max-height:700px){.pad{height:52px}.pad.big{height:58px}.pad.sp{height:44px}}
@@ -243,8 +246,8 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   .pads{gap:8px}
   .face{width:68px;height:68px}
   .pname{font-size:26px} .cname{font-size:16px}
-  .player.colbtn .pad.sp .spn{display:inline}
-  .player.colbtn .pad.sp{font-size:calc(var(--bh,58px)*.2);white-space:nowrap}
+  .player.colbtn .pad.sp > span{font-size:calc(var(--bh,58px)*.3);gap:4px}
+  .player.colbtn .pad.sp .spn{font-size:calc(var(--bh,58px)*.18);white-space:nowrap}
   .player.colbtn .face{width:68px;height:68px}
   body.vscpu:not(.desk) #p1 .face{width:48px;height:48px}
   body.vscpu:not(.desk) #p1 .pname{font-size:18px} body.vscpu:not(.desk) #p1 .cname{font-size:13px}
@@ -734,7 +737,7 @@ class Player{
     this.ch=ch;
     this.cnameEl.innerHTML=`<span>${ch.flag} ${esc(this.dispName())}</span>`;
     this.curMood=null; this.mood('normal');
-    this.spLabel.innerHTML=`${ch.emo}<span class="spn"> ${ch.spName}</span>`;
+    this.spLabel.innerHTML=`${ch.emo}<span class="spn">${ch.spName}</span>`;
   }
   reset(){
     this.grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));

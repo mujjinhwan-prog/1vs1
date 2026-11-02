@@ -53,20 +53,28 @@ body.vscpu #p1{transform:none}
 body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{visibility:hidden}
 @media (pointer:coarse){ .player{padding:6px;gap:3px} .pads{gap:4px} }
 
-/* 온라인: 내 화면을 크게, 상대 화면은 작게 */
-body.online:not(.desk) #p1{flex:.5}
-body.online:not(.desk) #p1 .ctrl, body.online:not(.desk) #p1 .rctrl{display:none}
-body.online:not(.desk) #p2{flex:1}
-/* 온라인 내 화면(폰): 판 양옆 좁은 기둥에 버튼을 세로로 */
-body.online:not(.desk) #p2 .ctrl, body.online:not(.desk) #p2 .rctrl{gap:6px}
-body.online:not(.desk) #p2 .ctrl > .pad, body.online:not(.desk) #p2 .rctrl > .pad{width:100%;height:58px;font-size:22px;padding:0;flex:none}
-body.online:not(.desk) #p2 .ctrl > .pad.big, body.online:not(.desk) #p2 .rctrl > .pad.big{height:64px;font-size:26px}
-body.online:not(.desk) #p2 .pad.sp{height:46px;font-size:18px}
-body.online:not(.desk) #p2 .pad.sp .spn{display:none}
-body.online:not(.desk) #p2 .face{width:44px;height:44px}
-body.online:not(.desk) #p2 .cname{white-space:normal;line-height:1.2}
-body.online:not(.desk) #p2 .pname{font-size:16px}
-body.online:not(.desk) #p2 .cname{font-size:11px}
+/* 혼자 하는 모드(컴퓨터·정복·온라인): 상대 2 : 나 8 */
+body.vscpu:not(.desk) #p1{flex:.25}
+body.vscpu #p1 .ctrl, body.vscpu #p1 .rctrl{display:none}
+/* 상대 작은 화면은 정보 간단히 */
+body.vscpu:not(.desk) #p1 .face{width:34px;height:34px;margin-bottom:1px}
+body.vscpu:not(.desk) #p1 .pname{font-size:14px}
+body.vscpu:not(.desk) #p1 .cname{font-size:11px}
+body.vscpu:not(.desk) #p1 .lines, body.vscpu:not(.desk) #p1 .wins{font-size:10px}
+body.vscpu:not(.desk) #p1 .status{min-height:0;font-size:10px}
+body.vscpu:not(.desk) #p1 .info{gap:1px}
+
+/* 터치 기기: 판 양옆 기둥에 버튼 3개씩 세로로
+   왼쪽 [필살기, ◀, ↻] / 오른쪽 [▼, ▶, ⇊] */
+.player.colbtn .side{justify-content:flex-start}
+.player.colbtn .ctrl, .player.colbtn .rctrl{margin-top:auto;gap:var(--bg,10px)}
+.player.colbtn .ctrl > .pad, .player.colbtn .rctrl > .pad{width:100%;height:var(--bh,58px);font-size:calc(var(--bh,58px)*.4);padding:0;flex:none;grid-column:auto}
+.player.colbtn .pad.sp{font-size:calc(var(--bh,58px)*.3)}
+.player.colbtn .pad.sp .spn{display:none}
+.player.colbtn .cname{white-space:normal;line-height:1.2}
+.player.colbtn .face{width:44px;height:44px}
+.player.colbtn .pname{font-size:16px}
+.player.colbtn .cname{font-size:11px}
 .player.loser{opacity:.75}
 
 .side{display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-width:0}
@@ -90,6 +98,7 @@ body.online:not(.desk) #p2 .cname{font-size:11px}
 .next{display:block;border-radius:6px;background:var(--well)}
 
 .ctrl,.rctrl{display:flex;flex-direction:column;gap:5px;margin-bottom:var(--lift,0px)}
+.pk-opts.one{grid-template-columns:1fr}
 .pads{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .pad{border:0;border-radius:14px;font-size:22px;height:62px;touch-action:none;
   background:color-mix(in srgb,var(--pc) 18%,var(--panel));color:var(--ink)}
@@ -234,12 +243,12 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   .pads{gap:8px}
   .face{width:68px;height:68px}
   .pname{font-size:26px} .cname{font-size:16px}
-  body.online:not(.desk) #p2 .ctrl > .pad, body.online:not(.desk) #p2 .rctrl > .pad{height:84px;font-size:32px}
-  body.online:not(.desk) #p2 .ctrl > .pad.big, body.online:not(.desk) #p2 .rctrl > .pad.big{height:92px;font-size:36px}
-  body.online:not(.desk) #p2 .pad.sp{height:64px;font-size:22px}
-  body.online:not(.desk) #p2 .pad.sp .spn{display:inline}
-  body.online:not(.desk) #p2 .face{width:68px;height:68px}
-  body.online:not(.desk) #p2 .pname{font-size:24px} body.online:not(.desk) #p2 .cname{font-size:15px} .lines,.wins,.status{font-size:14px}
+  .player.colbtn .pad.sp .spn{display:inline}
+  .player.colbtn .pad.sp{font-size:calc(var(--bh,58px)*.2);white-space:nowrap}
+  .player.colbtn .face{width:68px;height:68px}
+  body.vscpu:not(.desk) #p1 .face{width:48px;height:48px}
+  body.vscpu:not(.desk) #p1 .pname{font-size:18px} body.vscpu:not(.desk) #p1 .cname{font-size:13px}
+  .player.colbtn .pname{font-size:24px} .player.colbtn .cname{font-size:15px} .lines,.wins,.status{font-size:14px}
   .pk-grid{gap:8px} .ch{font-size:13px;padding:8px 2px} .pk-info{font-size:14px} .pk-go{padding:15px;font-size:17px}
   .opt{font-size:13px} .pk-name{font-size:13px} .pk-name input{font-size:17px;padding:10px 12px} .seg button{font-size:15px;padding:11px 4px} .opt small{font-size:12px}
   .mid{height:52px} .mid button{height:44px;font-size:16px} .mid button.ic{width:44px;font-size:20px}
@@ -644,10 +653,10 @@ const Wake=(()=>{ let lock=null;
 })();
 ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,()=>Snd.ensure(),{passive:true}));
 
-/* ===== 플레이어별 설정 (조작 손, 착지 미리보기) ===== */
+/* ===== 플레이어별 설정 (착지 미리보기) ===== */
 function loadOpt(id){
-  const d={lefty:false,ghost:true};
-  try{ const v=JSON.parse(localStorage.getItem('bd_opt_'+id)||'null'); if(v) return {...d,...v}; }catch(_){}
+  const d={ghost:true};
+  try{ const v=JSON.parse(localStorage.getItem('bd_opt_'+id)||'null'); if(v&&typeof v.ghost==='boolean') d.ghost=v.ghost; }catch(_){}
   return d;
 }
 
@@ -678,22 +687,16 @@ class Player{
   }
   applyOpt(){
     const [ls,rs]=this.sides, b=this.btn, L=this.ctrlEl, R=this.rctrlEl;
-    const col = !this.remote && document.body.classList.contains('online') && !document.body.classList.contains('desk');
-    if(col){
-      // 온라인(폰·태블릿): 기둥마다 버튼 3개를 세로로. ◀는 왼쪽, ▶는 오른쪽 고정
-      // 오른손잡이: 왼쪽 [필살기, 회전, ◀] / 오른쪽 [즉시낙하, 내리기, ▶]  ·  왼손잡이: 회전·낙하 쪽만 서로 바꿈
-      const left = this.opt.lefty ? [b.H,b.D,b.L] : [b.S,b.U,b.L];
-      const right= this.opt.lefty ? [b.S,b.U,b.R] : [b.H,b.D,b.R];
-      L.replaceChildren(...left); R.replaceChildren(...right);
-      ls.appendChild(L); rs.appendChild(R);
-    }else{
-      // 기본: 왼쪽 [필살기, ◀ ▶] / 오른쪽 [회전, 내리기·즉시낙하]  ·  왼손잡이는 좌우 묶음을 통째로 바꿈
+    const desk=document.body.classList.contains('desk');
+    const solo=document.body.classList.contains('vscpu')&&this.id===1;
+    const col=!desk&&!solo;
+    this.root.classList.toggle('colbtn',col);
+    if(col){ L.replaceChildren(b.S,b.L,b.U); R.replaceChildren(b.D,b.R,b.H); }
+    else{
       this.padL.replaceChildren(b.L,b.R); this.padR.replaceChildren(b.U,b.D,b.H);
       L.replaceChildren(b.S,this.padL); R.replaceChildren(this.padR);
-      if(this.opt.lefty){ ls.appendChild(R); rs.appendChild(L); }
-      else{ ls.appendChild(L); rs.appendChild(R); }
     }
-    this.root.classList.toggle('lefty',!!this.opt.lefty);
+    ls.appendChild(L); rs.appendChild(R);
   }
   // 표정: 'normal' | 'happy'(공격 성공) | 'shock'(공격 받음). ms가 있으면 그 뒤 기본 표정으로 돌아감
   mood(m,ms){
@@ -902,24 +905,25 @@ class Player{
     const desk=document.body.classList.contains('desk');
     const r=this.root.getBoundingClientRect();
     const W=r.width, H=r.height;
-    const online=!desk&&document.body.classList.contains('online');
+    const col=this.root.classList.contains('colbtn');
+    const small=!desk&&document.body.classList.contains('vscpu')&&this.id===1;
     const tab=W>=700, pad=desk?16:12, gb=9; // 안쪽 여백, 방해 게이지 막대
     let availW, availH;
-    if(online&&!this.remote){
-      // 온라인 내 화면: 양옆은 버튼 한 줄 폭만, 나머지는 전부 게임판
-      const side=tab?112:Math.max(50,Math.min(64,Math.round(W*0.15)));
+    if(col){
+      // 양옆은 버튼 한 줄 폭만, 나머지는 전부 게임판
+      const side=tab?Math.max(104,Math.min(150,Math.round(W*0.15))):Math.max(50,Math.min(66,Math.round(W*0.16)));
       this.root.style.setProperty('--side',side+'px');
       availW=W-pad-side*2-6-gb; availH=H-pad;
     }else{
       // 판이 세로 공간을 최대한 쓰도록 양옆 기둥 폭을 맞춤
       const cellH=Math.floor((H-pad)/ROWS);
       const ideal=(W-pad-6-gb-cellH*COLS)/2;
-      const minSide=desk?100:(this.remote&&online)?60:(tab?120:70), maxSide=desk?100:(tab?180:130);
+      const minSide=desk?100:small?(tab?120:66):(tab?120:70), maxSide=desk?100:(tab?180:130);
       const side=Math.max(minSide,Math.min(maxSide,ideal));
       this.root.style.setProperty('--side',side+'px');
       availW=W-pad-side*2-6-gb; availH=H-pad;
     }
-    const s=Math.max(8,Math.floor(Math.min(availW/COLS,availH/ROWS)));
+    const s=Math.max(4,Math.floor(Math.min(availW/COLS,availH/ROWS)));
     this.cs=s;
     const dpr=window.devicePixelRatio||1;
     this.cv.style.width=s*COLS+'px'; this.cv.style.height=s*ROWS+'px';
@@ -929,15 +933,19 @@ class Player{
     this.nv.style.width='48px'; this.nv.style.height='30px';
     this.nv.width=48*dpr; this.nv.height=30*dpr;
     this.nctx.setTransform(dpr,0,0,dpr,0,0);
-    // 조작 버튼을 화면 끝에서 위로 올리기 (판 높이의 약 22%, 공간이 남는 만큼만)
+    // 버튼 크기·간격: 정보칸 아래 남는 공간에 맞춤, 화면 끝에서 살짝 띄움
     this.root.style.setProperty('--lift','0px');
-    if(!desk&&(!online||!this.remote)){
-      const slack=side=>{ let used=0, n=0;
-        for(const c of side.children){ if(c.offsetParent!==null||getComputedStyle(c).display!=='none'){ used+=c.offsetHeight; n++; } }
-        return side.clientHeight-used-6*Math.max(0,n-1); };
+    if(col){
       const [ls,rs]=this.sides;
-      const lift=Math.max(0,Math.min(H*0.22,slack(ls)-6,slack(rs)-6));
-      this.root.style.setProperty('--lift',Math.floor(lift)+'px');
+      const topH=side=>{ let h=0; for(const c of side.children){ if(c!==this.ctrlEl&&c!==this.rctrlEl&&getComputedStyle(c).display!=='none') h+=c.offsetHeight+6; } return h; };
+      const free=H-pad-Math.max(topH(ls),topH(rs))-8;
+      const maxB=tab?110:68, minB=38;
+      const lift=Math.round(Math.min(H*0.07,Math.max(0,free-3*minB-16)*0.4));
+      const gap=Math.round(Math.max(6,Math.min(tab?22:14,(free-lift)*0.06)));
+      const bh=Math.floor(Math.max(minB,Math.min(maxB,(free-lift-2*gap)/3)));
+      this.root.style.setProperty('--bh',bh+'px');
+      this.root.style.setProperty('--bg',gap+'px');
+      this.root.style.setProperty('--lift',lift+'px');
     }
   }
   draw(){
@@ -1381,6 +1389,7 @@ function setLabels(){
   document.body.classList.toggle('vscpu',mode==='cpu'||mode==='online');
   document.body.classList.toggle('online',mode==='online');
   players.forEach(p=>p.applyOpt());
+  requestAnimationFrame(fitAll);
   P1.nameEl.textContent = mode==='cpu' ? `CPU Lv.${cpuLvl}` : mode==='online' ? '상대' : 'P1';
   P2.nameEl.textContent = mode==='cpu' ? 'YOU' : mode==='online' ? '나' : 'P2';
   requestAnimationFrame(fitAll);
@@ -1452,10 +1461,7 @@ function renderPicker(p){
       <label class="pk-name">이름 바꾸기<input type="text" maxlength="8" autocomplete="off" placeholder="${esc(sel.name)}" value="${esc(p.names[sel.id]||'')}"></label>
       <span class="k">특성</span> ${sel.passive}<br>
       <span class="k">필살기 · ${sel.spName}</span> (${sel.need}줄 충전) ${sel.special}</div>
-    <div class="pk-opts">
-      <div class="opt">조작 손
-        <div class="seg"><button data-opt="lefty" data-v="0" class="${p.opt.lefty?'':'on'}">오른손잡이</button><button data-opt="lefty" data-v="1" class="${p.opt.lefty?'on':''}">왼손잡이</button></div>
-        <small>${p.opt.lefty?'회전·낙하 버튼이 왼쪽':'회전·낙하 버튼이 오른쪽'}</small></div>
+    <div class="pk-opts one">
       <div class="opt">착지 미리보기
         <div class="seg"><button data-opt="ghost" data-v="1" class="${p.opt.ghost?'on':''}">보이기</button><button data-opt="ghost" data-v="0" class="${p.opt.ghost?'':'on'}">숨기기</button></div>
         <small>${p.opt.ghost?'블록이 떨어질 자리 표시':'표시 안 함 (고수용)'}</small></div>
@@ -1643,7 +1649,7 @@ document.addEventListener('touchmove',e=>{ if(!e.target.closest('.picker,.card')
 document.addEventListener('gesturestart',e=>e.preventDefault());
 
 /* ===== 루프 ===== */
-function fitAll(){ applyMode(); players.forEach(p=>p.fit()); }
+function fitAll(){ applyMode(); players.forEach(p=>{ p.applyOpt(); }); players.forEach(p=>p.fit()); }
 addEventListener('resize',fitAll);
 deskMQ.addEventListener('change',fitAll);
 if(window.ResizeObserver) new ResizeObserver(()=>players.forEach(p=>p.fit())).observe($('#app'));

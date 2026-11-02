@@ -227,6 +227,8 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
 .lb-form input,.lb-join input{border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;font-size:15px;
   color:var(--ink);background:var(--panel);-webkit-user-select:text;user-select:text;touch-action:manipulation}
 .lb-form input:focus,.lb-join input:focus{outline:2px solid var(--p2);border-color:transparent}
+.lb-stat{font-size:11px;font-weight:700;color:var(--muted);text-align:left;margin-bottom:6px}
+.lb-stat.ok{color:#2a9d6a} .lb-stat.bad{color:var(--warn)}
 .lb-msg{min-height:18px;font-size:13px;font-weight:700;color:var(--warn);margin-bottom:6px}
 .lvdesc{font-size:13px;font-weight:700;margin-bottom:14px;min-height:20px}
 /* 태블릿(터치 + 넓은 화면): 버튼 크게 */
@@ -1062,7 +1064,7 @@ const Net={
     if(!this.configured()) return false;
     if(!window.supabase){
       await new Promise((res,rej)=>{ const sc=document.createElement('script');
-        sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
+        sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
         sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); });
     }
     this.sb=window.supabase.createClient(ONLINE.url,ONLINE.key,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:40}}});
@@ -1076,7 +1078,14 @@ const Net={
       this.rooms=Object.values(st).flat().map(x=>x.room).filter(Boolean);
       if(state==='lobby') renderLobbyList();
     });
-    ch.subscribe(s=>{ if(s==='SUBSCRIBED'&&this.isHost&&this.info) ch.track({room:this.info}); });
+    this.lobbyStat='connecting'; this.lobbyErr='';
+    ch.subscribe((s,err)=>{
+      this.lobbyStat=s; this.lobbyErr=err?String(err.message||err):'';
+      if(s==='SUBSCRIBED'&&this.isHost&&this.info) ch.track({room:this.info});
+      updateLbStat();
+      if(s!=='SUBSCRIBED'&&this.isHost&&state==='select'&&!this.peer)
+        P1.say(waitHtml(`⚠️ 서버 연결 문제 (${esc(s)})<br>${esc(this.lobbyErr).slice(0,80)}`));
+    });
     this.lobby=ch;
   },
   closeLobby(){ const l=this.lobby; this.lobby=null; if(l) try{ this.sb.removeChannel(l); }catch(_){} },
@@ -1085,7 +1094,10 @@ const Net={
     const ch=this.sb.channel('bd-room-'+id,{config:{broadcast:{self:false},presence:{key:this.me}}});
     ch.on('broadcast',{event:'m'},({payload})=>this.onMsg(payload));
     ch.on('presence',{event:'leave'},({key})=>{ if(key&&key===this.peer) this.peerLeft(); });
-    ch.subscribe(s=>{ if(s==='SUBSCRIBED'){ try{ ch.track({at:Date.now()}); }catch(_){} onReady&&onReady(); } });
+    ch.subscribe((s,err)=>{
+      if(s==='SUBSCRIBED'){ try{ ch.track({at:Date.now()}); }catch(_){} onReady&&onReady(); }
+      else if(s==='CHANNEL_ERROR'||s==='TIMED_OUT'){ this.roomErr=s+(err?': '+(err.message||err):''); if(this.joinCb) this.joinCb({ok:false,why:'net',err:this.roomErr}); }
+    });
     this.room=ch;
   },
   closeRoom(){ const r=this.room; this.room=null; if(r) try{ this.sb.removeChannel(r); }catch(_){} },
@@ -1209,6 +1221,7 @@ function lobby(){
   Net.openLobby();
   showCard(`<h1 class="disp">🌐 온라인 대결</h1>
     <p style="margin-bottom:8px">방을 눌러 들어가거나, 새 방을 만들어요.</p>
+    <div class="lb-stat" id="lbStat"></div>
     <div class="lb-list" id="lbList"></div>
     <div class="lb-join hidden" id="lbJoin"></div>
     <div class="lb-form">
@@ -1218,13 +1231,20 @@ function lobby(){
     </div>
     <div class="lb-msg" id="lbMsg"></div>
     <div class="btns"><button class="btn ghost" data-go="menu">처음으로</button></div>`);
-  renderLobbyList();
+  renderLobbyList(); updateLbStat();
   $('#mkRoom').addEventListener('click',()=>{
     const name=$('#rmName').value.trim(), pw=$('#rmPw').value.trim();
     if(!name){ $('#lbMsg').textContent='방 이름을 입력해 주세요.'; $('#rmName').focus(); return; }
     FS.enter(); Net.create(name,pw); hideCard(); openPickers();
     P1.say(waitHtml(`「${esc(name)}」 방을 만들었어요${pw?' 🔒':''}<br>상대를 기다리는 중…`));
   });
+}
+function updateLbStat(){
+  const el=$('#lbStat'); if(!el) return;
+  const st=Net.lobbyStat;
+  if(st==='SUBSCRIBED'){ el.className='lb-stat ok'; el.textContent='● 서버 연결됨 · 방 목록 실시간 갱신 중'; }
+  else if(st==='connecting'){ el.className='lb-stat'; el.textContent='● 서버에 연결하는 중…'; }
+  else{ el.className='lb-stat bad'; el.textContent=`● 연결 실패 (${st}) ${Net.lobbyErr||''}`.slice(0,120); }
 }
 function renderLobbyList(){
   const el=$('#lbList'); if(!el) return;
@@ -1256,7 +1276,7 @@ async function doJoin(r,pw){
     Net.closeLobby(); hideCard(); openPickers();
     P1.say(waitHtml(`「${esc(r.name)}」 방에 들어왔어요<br>상대가 캐릭터를 고르는 중…`));
   }else if($('#lbMsg')){
-    $('#lbMsg').textContent = res.why==='pw' ? '비밀번호가 틀렸어요.' : res.why==='full' ? '이미 다른 사람이 들어간 방이에요.' : '방에 연결할 수 없어요. 방이 닫혔을 수 있어요.';
+    $('#lbMsg').textContent = res.why==='pw' ? '비밀번호가 틀렸어요.' : res.why==='full' ? '이미 다른 사람이 들어간 방이에요.' : res.why==='net' ? `서버 연결 오류: ${res.err||''}` : '방에 연결할 수 없어요. 방이 닫혔을 수 있어요.';
   }
 }
 function onlineExitCard(){

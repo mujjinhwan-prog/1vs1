@@ -66,16 +66,28 @@ body.vscpu:not(.desk) #p1 .info{gap:1px}
 
 /* 터치 기기: 판 양옆 기둥에 버튼 3개씩 세로로
    왼쪽 [필살기, ◀, ↻] / 오른쪽 [▼, ▶, ⇊] */
-.player.colbtn .side{justify-content:flex-start}
-.player.colbtn .ctrl, .player.colbtn .rctrl{margin-top:auto;gap:var(--bg,10px)}
-.player.colbtn .ctrl > .pad, .player.colbtn .rctrl > .pad{width:100%;height:var(--bh,58px);font-size:calc(var(--bh,58px)*.4);padding:0;flex:none;grid-column:auto}
-.player.colbtn .pad.sp > span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-  font-size:calc(var(--bh,58px)*.34);line-height:1}
-.player.colbtn .pad.sp .spn{display:block;font-size:11px;line-height:1.15;word-break:keep-all;text-align:center;padding:0 2px}
-.player.colbtn .cname{white-space:normal;line-height:1.2}
-.player.colbtn .face{width:44px;height:44px}
+.meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+/* 터치 기기 내 화면: 위에 정보 한 줄, 아래는 [버튼 | 게임판 | 버튼] — 게임판이 남는 공간을 꽉 채움 */
+.player.colbtn{padding:4px;column-gap:3px;row-gap:4px;grid-template-columns:var(--side,60px) auto var(--side,60px);
+  grid-template-rows:auto 1fr;grid-template-areas:"in in nx" "cl bd cr";justify-content:center}
+.player.colbtn > .side{display:contents}
+.player.colbtn .info{grid-area:in;flex-direction:row;align-items:center;gap:8px;padding:2px 2px 0}
+.player.colbtn .meta{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:1px}
+.player.colbtn .gauge{flex-basis:100%;margin-top:1px}
+.player.colbtn .status{min-height:0}
+.player.colbtn .face{width:40px;height:40px;margin:0}
 .player.colbtn .pname{font-size:16px}
-.player.colbtn .cname{font-size:11px}
+.player.colbtn .cname{font-size:12px}
+.player.colbtn .nextbox{grid-area:nx;align-self:center;justify-self:end;flex-direction:row;align-items:center;gap:4px}
+.player.colbtn .keys{display:none}
+.player.colbtn .nextbox{font-size:0}
+.player.colbtn .board-wrap{grid-area:bd}
+.player.colbtn .ctrl{grid-area:cl} .player.colbtn .rctrl{grid-area:cr}
+.player.colbtn .ctrl, .player.colbtn .rctrl{align-self:end;gap:var(--bg,10px);margin:0 0 var(--lift,0px)}
+.player.colbtn .ctrl > .pad, .player.colbtn .rctrl > .pad{width:100%;height:var(--bh,58px);font-size:calc(min(var(--bh,58px),var(--side,60px))*.42);padding:0;flex:none;grid-column:auto}
+.player.colbtn .pad.sp > span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:calc(min(var(--bh,58px),var(--side,60px))*.4);line-height:1}
+.player.colbtn .pad.sp .spn{display:block;font-size:11px;line-height:1.15;word-break:keep-all;text-align:center;padding:0 2px;margin:0}
 .player.loser{opacity:.75}
 
 .side{display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-width:0}
@@ -246,12 +258,12 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
   .pads{gap:8px}
   .face{width:68px;height:68px}
   .pname{font-size:26px} .cname{font-size:16px}
-  .player.colbtn .pad.sp > span{font-size:calc(var(--bh,58px)*.3);gap:4px}
-  .player.colbtn .pad.sp .spn{font-size:calc(var(--bh,58px)*.18);white-space:nowrap}
-  .player.colbtn .face{width:68px;height:68px}
+  .player.colbtn .pad.sp .spn{font-size:17px;white-space:nowrap}
+  .player.colbtn .face{width:56px;height:56px}
+  .player.colbtn .nextbox{font-size:12px}
   body.vscpu:not(.desk) #p1 .face{width:48px;height:48px}
   body.vscpu:not(.desk) #p1 .pname{font-size:18px} body.vscpu:not(.desk) #p1 .cname{font-size:13px}
-  .player.colbtn .pname{font-size:24px} .player.colbtn .cname{font-size:15px} .lines,.wins,.status{font-size:14px}
+  .player.colbtn .pname{font-size:24px} .player.colbtn .cname{font-size:16px} .lines,.wins,.status{font-size:14px}
   .pk-grid{gap:8px} .ch{font-size:13px;padding:8px 2px} .pk-info{font-size:14px} .pk-go{padding:15px;font-size:17px}
   .opt{font-size:13px} .pk-name{font-size:13px} .pk-name input{font-size:17px;padding:10px 12px} .seg button{font-size:15px;padding:11px 4px} .opt small{font-size:12px}
   .mid{height:52px} .mid button{height:44px;font-size:16px} .mid button.ic{width:44px;font-size:20px}
@@ -274,9 +286,9 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
     <div class="side">
       <div class="info">
         <div class="face"></div>
-        <span class="pname disp">P1</span><span class="cname"></span>
+        <div class="meta"><span class="pname disp">P1</span><span class="cname"></span>
         <span class="lines">0줄</span><span class="wins">승 <b>0</b></span>
-        <div class="gauge"><i></i></div><span class="status"></span>
+        <div class="gauge"><i></i></div><span class="status"></span></div>
       </div>
       <div class="keys"><b>A D</b> 이동<br><b>W</b> 회전<br><b>S</b> 내리기<br><b>Space</b> 즉시낙하<br><b>E</b> 필살기</div>
       <div class="ctrl">
@@ -309,9 +321,9 @@ body.desk .card .mirror, body.vscpu .card .mirror{display:none}
     <div class="side">
       <div class="info">
         <div class="face"></div>
-        <span class="pname disp">P2</span><span class="cname"></span>
+        <div class="meta"><span class="pname disp">P2</span><span class="cname"></span>
         <span class="lines">0줄</span><span class="wins">승 <b>0</b></span>
-        <div class="gauge"><i></i></div><span class="status"></span>
+        <div class="gauge"><i></i></div><span class="status"></span></div>
       </div>
       <div class="keys"><b>← →</b> 이동<br><b>↑</b> 회전<br><b>↓</b> 내리기<br><b>Enter</b> 즉시낙하<br><b>/</b> 필살기</div>
       <div class="ctrl">
@@ -656,10 +668,11 @@ const Wake=(()=>{ let lock=null;
 })();
 ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,()=>Snd.ensure(),{passive:true}));
 
-/* ===== 플레이어별 설정 (착지 미리보기) ===== */
+/* ===== 플레이어별 설정 (조작 손, 착지 미리보기) ===== */
 function loadOpt(id){
-  const d={ghost:true};
-  try{ const v=JSON.parse(localStorage.getItem('bd_opt_'+id)||'null'); if(v&&typeof v.ghost==='boolean') d.ghost=v.ghost; }catch(_){}
+  const d={lefty:false,ghost:true};
+  try{ const v=JSON.parse(localStorage.getItem('bd_opt_'+id)||'null');
+    if(v){ if(typeof v.ghost==='boolean') d.ghost=v.ghost; if(typeof v.lefty==='boolean') d.lefty=v.lefty; } }catch(_){}
   return d;
 }
 
@@ -694,7 +707,12 @@ class Player{
     const solo=document.body.classList.contains('vscpu')&&this.id===1;
     const col=!desk&&!solo;
     this.root.classList.toggle('colbtn',col);
-    if(col){ L.replaceChildren(b.S,b.L,b.U); R.replaceChildren(b.D,b.R,b.H); }
+    // 오른손잡이: 왼쪽 [필살기, ◀, ↻] / 오른쪽 [▼, ▶, ⇊]
+    // 왼손잡이:  왼쪽 [▼, ◀, ⇊] / 오른쪽 [필살기, ▶, ↻]  (◀▶는 그대로, 나머지 좌우 교체)
+    if(col){
+      if(this.opt.lefty){ L.replaceChildren(b.D,b.L,b.H); R.replaceChildren(b.S,b.R,b.U); }
+      else{ L.replaceChildren(b.S,b.L,b.U); R.replaceChildren(b.D,b.R,b.H); }
+    }
     else{
       this.padL.replaceChildren(b.L,b.R); this.padR.replaceChildren(b.U,b.D,b.H);
       L.replaceChildren(b.S,this.padL); R.replaceChildren(this.padR);
@@ -911,12 +929,18 @@ class Player{
     const col=this.root.classList.contains('colbtn');
     const small=!desk&&document.body.classList.contains('vscpu')&&this.id===1;
     const tab=W>=700, pad=desk?16:12, gb=9; // 안쪽 여백, 방해 게이지 막대
-    let availW, availH;
+    let s, ky=1;
     if(col){
-      // 양옆은 버튼 한 줄 폭만, 나머지는 전부 게임판
-      const side=tab?Math.max(104,Math.min(150,Math.round(W*0.15))):Math.max(50,Math.min(66,Math.round(W*0.16)));
+      // 정보 줄을 뺀 나머지를 게임판이 꽉 채우도록 칸 크기를 정하고, 남는 폭은 버튼 기둥에
+      const hdr=Math.max(this.root.querySelector('.info').offsetHeight,this.nv.parentNode.offsetHeight);
+      const padC=8, colGap=6, gbW=9, rowGap=4;
+      const minSide=tab?110:44, maxSide=tab?220:120;
+      const sW=(W-padC-colGap-gbW-2*minSide)/COLS, sH=(H-padC-hdr-rowGap)/ROWS;
+      s=Math.max(4,Math.floor(Math.min(sW,sH)*4)/4);
+      const side=Math.floor(Math.min(maxSide,(W-padC-colGap-gbW-s*COLS)/2));
       this.root.style.setProperty('--side',side+'px');
-      availW=W-pad-side*2-6-gb; availH=H-pad;
+      // 폭 때문에 세로가 남으면 칸을 살짝(최대 15%) 세로로 늘려 판이 위아래를 꽉 채우게
+      ky=Math.max(1,Math.min(1.15,sH/s));
     }else{
       // 판이 세로 공간을 최대한 쓰도록 양옆 기둥 폭을 맞춤
       const cellH=Math.floor((H-pad)/ROWS);
@@ -924,29 +948,25 @@ class Player{
       const minSide=desk?100:small?(tab?120:66):(tab?120:70), maxSide=desk?100:(tab?180:130);
       const side=Math.max(minSide,Math.min(maxSide,ideal));
       this.root.style.setProperty('--side',side+'px');
-      availW=W-pad-side*2-6-gb; availH=H-pad;
+      s=Math.max(4,Math.floor(Math.min((W-pad-side*2-6-gb)/COLS,(H-pad)/ROWS)));
     }
-    const s=Math.max(4,Math.floor(Math.min(availW/COLS,availH/ROWS)));
-    this.cs=s;
-    const dpr=window.devicePixelRatio||1;
-    this.cv.style.width=s*COLS+'px'; this.cv.style.height=s*ROWS+'px';
-    this.cv.width=s*COLS*dpr; this.cv.height=s*ROWS*dpr;
-    this.ctx.setTransform(dpr,0,0,dpr,0,0);
-    this.gbar.style.height=s*ROWS+'px';
+    this.cs=s; this.ky=ky;
+    const dpr=window.devicePixelRatio||1, bh=s*ROWS*ky;
+    this.cv.style.width=s*COLS+'px'; this.cv.style.height=bh+'px';
+    this.cv.width=Math.round(s*COLS*dpr); this.cv.height=Math.round(bh*dpr);
+    this.ctx.setTransform(dpr,0,0,dpr*ky,0,0);
+    this.gbar.style.height=bh+'px';
     this.nv.style.width='48px'; this.nv.style.height='30px';
     this.nv.width=48*dpr; this.nv.height=30*dpr;
     this.nctx.setTransform(dpr,0,0,dpr,0,0);
-    // 버튼 크기·간격: 정보칸 아래 남는 공간에 맞춤, 화면 끝에서 살짝 띄움
+    // 버튼 크기·간격: 게임판 높이에 맞춤, 화면 끝에서 살짝 띄움
     this.root.style.setProperty('--lift','0px');
     if(col){
-      const [ls,rs]=this.sides;
-      const topH=side=>{ let h=0; for(const c of side.children){ if(c!==this.ctrlEl&&c!==this.rctrlEl&&getComputedStyle(c).display!=='none') h+=c.offsetHeight+6; } return h; };
-      const free=H-pad-Math.max(topH(ls),topH(rs))-8;
-      const maxB=tab?110:68, minB=38;
-      const lift=Math.round(Math.min(H*0.07,Math.max(0,free-3*minB-16)*0.4));
-      const gap=Math.round(Math.max(6,Math.min(tab?22:14,(free-lift)*0.06)));
-      const bh=Math.floor(Math.max(minB,Math.min(maxB,(free-lift-2*gap)/3)));
-      this.root.style.setProperty('--bh',bh+'px');
+      const rowH=bh;
+      const lift=Math.round(Math.min(rowH*0.06,tab?48:28));
+      const gap=Math.round(Math.max(6,Math.min(tab?22:14,rowH*0.03)));
+      const btnH=Math.floor(Math.max(38,Math.min(tab?150:96,(rowH*0.66-lift-2*gap)/3)));
+      this.root.style.setProperty('--bh',btnH+'px');
       this.root.style.setProperty('--bg',gap+'px');
       this.root.style.setProperty('--lift',lift+'px');
     }
@@ -1464,7 +1484,10 @@ function renderPicker(p){
       <label class="pk-name">이름 바꾸기<input type="text" maxlength="8" autocomplete="off" placeholder="${esc(sel.name)}" value="${esc(p.names[sel.id]||'')}"></label>
       <span class="k">특성</span> ${sel.passive}<br>
       <span class="k">필살기 · ${sel.spName}</span> (${sel.need}줄 충전) ${sel.special}</div>
-    <div class="pk-opts one">
+    <div class="pk-opts">
+      <div class="opt">조작 손
+        <div class="seg"><button data-opt="lefty" data-v="0" class="${p.opt.lefty?'':'on'}">오른손잡이</button><button data-opt="lefty" data-v="1" class="${p.opt.lefty?'on':''}">왼손잡이</button></div>
+        <small>${p.opt.lefty?'필살기·회전 버튼이 오른쪽':'필살기·회전 버튼이 왼쪽'}</small></div>
       <div class="opt">착지 미리보기
         <div class="seg"><button data-opt="ghost" data-v="1" class="${p.opt.ghost?'on':''}">보이기</button><button data-opt="ghost" data-v="0" class="${p.opt.ghost?'':'on'}">숨기기</button></div>
         <small>${p.opt.ghost?'블록이 떨어질 자리 표시':'표시 안 함 (고수용)'}</small></div>
